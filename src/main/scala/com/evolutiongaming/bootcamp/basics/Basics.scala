@@ -379,16 +379,16 @@ object Basics {
   // More exercises to help internalise the "types define the set of possible values that a value can have":
 
   // Exercise. List all values of the type `Option[Boolean]`:
-  val allOptionBooleans: Set[Option[Boolean]] = Set()
+  val allOptionBooleans: Set[Option[Boolean]] = Set(None, Some(true), Some(false))
 
   // Exercise. List all values of the type `Either[Unit, Boolean]`:
-  val allEitherUnitBooleans: Set[Either[Unit, Boolean]] = Set()
+  val allEitherUnitBooleans: Set[Either[Unit, Boolean]] = Set(Left(()), Right(true), Right(false))
 
   // Exercise. List all values of the type `Either[Boolean, Boolean]`:
-  val allEitherBooleanBooleans: Set[Either[Boolean, Boolean]] = Set()
+  val allEitherBooleanBooleans: Set[Either[Boolean, Boolean]] = Set(Left(false), Left(true), Right(false), Right(true))
 
   // Exercise. List all values of the type `(Boolean, Boolean)`:
-  val allTupleBooleanBooleans: Set[(Boolean, Boolean)] = Set()
+  val allTupleBooleanBooleans: Set[(Boolean, Boolean)] = Set((false, false), (true, true), (false, true), (true, false))
 
   // Question. Can we make a `Set` with all possible `Byte` values? `Double` values? `String` values?
 }
