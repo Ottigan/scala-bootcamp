@@ -369,6 +369,8 @@ object Basics {
   // concatenate the list with comma as a delimiter. You can provide the `List[String]` type
   // explicitly after the method name or for the `format` function.
 
+  val formattedList: String = formatNamedValue("test", (x: List[String]) => x.mkString(", "))(List("Dog", "Cat"))
+
   // Tuples
   //
   // A tuple is a value that contains a fixed number of elements, each with a distinct type. Tuples are immutable.
