@@ -46,7 +46,7 @@ object Basics {
   val bool2: Boolean = false
 
   // Exercise. List all boolean values
-  val allBooleans: Set[Boolean] = Set( /* add values here, separated by commas */ )
+  val allBooleans: Set[Boolean] = Set(true, false)
 
   /* Common boolean operations:
       !false         // true - `!` is negation
@@ -221,16 +221,17 @@ object Basics {
   // Try defining it using both String concatenation and interpolation.
   //
   // Note. `???` can be used to indicate code that is yet to be implemented.
-  def helloMethod(name: String): String = ???
+  def helloMethod(name: String): String = s"Hello, $name!"
 
   // Exercise. Define a method "add" which takes two integers and returns their sum.
-  def add(a: Int, b: Int): Int = a * 42 - b / 4 // replace with a correct implementation
+  def add(a: Int, b: Int): Int = a + b // replace with a correct implementation
 
   // You can use parameter names to specify them in a different order
   val sum1 = add(b = 2, a = 3) // addition is commutative though so it doesn't change the result
 
   // Methods can have default parameters
   def addNTimes(x: Int, y: Int, times: Int = 1): Int = x + y * times
+
   val sum2 = addNTimes(2, 3) // 5
   val sum3 = addNTimes(2, 3, 4) // 14
 
@@ -246,17 +247,19 @@ object Basics {
   // Exercise. Implement `helloFunction` using `helloMethod` you implemented above. Why was the type
   // annotation skipped when defining `helloFunction`?
 
-  val helloFunction: String => String = (name: String) => /* implement here */ name
+  val helloFunction: String => String = (name: String) => helloMethod(name)
+  val helloFunction2: String => String = (name: String) => s"Hello, $name!"
 
   // Exercise. Using the aforementioned String `length` implement a `stringLength` function which returns
   // the length of the String passed.
-  val stringLength: String => Int = (s: String) => /* implement here */ s.hashCode()
+  val stringLength: String => Int = (s: String) => s.length
+  val stringLength2: String => Int = _.length
 
   // If each argument of a function is used exactly once, you can use `_` to refer to them
   val addFunction: (Int, Int) => Int = _ + _
 
-  // First occurance of _ - it's 1st argument.
-  // Second occurance of _ - it's 2nd argument.
+  // First occurrence of _ - it's 1st argument.
+  // Second occurrence of _ - it's 2nd argument.
   // And etc...
 
   // addFunction can be rewritten as:
@@ -310,8 +313,14 @@ object Basics {
   // `toDouble` (for converting Byte-s and Int-s to Double-s).
 
   def power(n: Byte): Int => Long = { x: Int =>
-    // implement here
-    (x + n).toLong
+    val xDouble = x.toDouble
+    val nDouble = n.toDouble
+    val result = Math.pow(xDouble, nDouble)
+    (result).toLong
+  }
+
+  def power1(n: Byte): Int => Long = { x: Int =>
+    Math.pow(x, n).round
   }
 
   // Polymorphic methods, or methods which take type parameters
@@ -321,12 +330,15 @@ object Basics {
   //
   // The function `formatNamedDouble` can be rewritten in a more general way as follows:
 
-  def formatNamedValue[A](name: String, format: A => String): A => String = { x : A =>
+  def formatNamedValue[A](name: String, format: A => String): A => String = { x: A =>
     s"$name = ${format(x)}"
   }
 
   val commasForThousands: Long => String = (x: Long) => f"$x%,d"
   val formattedLong: String = formatNamedValue("y", commasForThousands)(123456) // y = 123,456
+  val formattedLong2: String = formatNamedValue("y", (x: Long) => f"$x%,d")(123456) // y = 123,456
+  val formattedLong3: String = formatNamedValue[Long]("y", x => f"$x%,d")(123456) // y = 123,456
+
 
   // Tuples
   //
