@@ -29,12 +29,13 @@ class ClassesAndTraitsSpec extends AnyFlatSpec with ScalaCheckDrivenPropertyChec
         Point(-12, -3),
         Point(-3, 7),
         Circle(0, 0, 5),
+        Rectangle(2, 5, 6, 90),
       )
     )
 
     mbr.minX shouldEqual -12
     mbr.maxX shouldEqual 5
-    mbr.minY shouldEqual -5
-    mbr.maxY shouldEqual 7
+    mbr.minY shouldEqual -40
+    mbr.maxY shouldEqual 50
   }
 }

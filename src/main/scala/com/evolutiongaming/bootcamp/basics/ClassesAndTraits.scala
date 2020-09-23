@@ -19,7 +19,7 @@ object ClassesAndTraits {
 
   val point1 = new MutablePoint(3, 4)
   println(point1.x) // 3.0
-  println(point1)   // (3.0, 4.0)
+  println(point1) // (3.0, 4.0)
 
   // Question. Is MutablePoint a good design? Why or why not?
 
@@ -59,12 +59,21 @@ object ClassesAndTraits {
   }
 
   final case class Circle(centerX: Double, centerY: Double, radius: Double) extends Shape {
-    override def x: Double = ???
-    override def y: Double = ???
-    override def minX: Double = ???
-    override def maxX: Double = ???
-    override def minY: Double = ???
-    override def maxY: Double = ???
+    override def x: Double = centerX
+    override def y: Double = centerY
+    override def minX: Double = x - radius
+    override def maxX: Double = x + radius
+    override def minY: Double = y - radius
+    override def maxY: Double = y + radius
+  }
+
+  final case class Rectangle(centerX: Double, centerY: Double, width: Double, height: Double) extends Shape {
+    override def x: Double = centerX
+    override def y: Double = centerY
+    override def minX: Double = x - width / 2
+    override def maxX: Double = x + width / 2
+    override def minY: Double = y - height / 2
+    override def maxY: Double = y + height / 2
   }
 
   // Case Classes
@@ -85,8 +94,8 @@ object ClassesAndTraits {
 
   val shape: Shape = point2
   val point2Description = shape match {
-    case Point(x, y)  => s"x = $x, y = $y"
-    case _            => "other shape"
+    case Point(x, y) => s"x = $x, y = $y"
+    case _ => "other shape"
   }
 
   val point3 = point2.copy(x = 3)
@@ -95,22 +104,37 @@ object ClassesAndTraits {
   // Exercise. Implement an algorithm for finding the minimum bounding rectangle
   // (https://en.wikipedia.org/wiki/Minimum_bounding_rectangle) for a set of `Bounded` objects.
   //
-  def minimumBoundingRectangle(objects: Set[Bounded]): Bounded = {
+  def minimumBoundingRectangle1(objects: Set[Bounded]): Bounded = {
     new Bounded {
       implicit private val doubleOrdering: Ordering[Double] = Ordering.Double.IeeeOrdering
 
       // if needed, fix the code to be correct
       override def minX: Double = objects.map(_.minX).min
-      override def maxX: Double = objects.map(_.minX).min
-      override def minY: Double = objects.map(_.minX).min
-      override def maxY: Double = objects.map(_.minX).min
+      override def maxX: Double = objects.map(_.maxX).max
+      override def minY: Double = objects.map(_.minY).min
+      override def maxY: Double = objects.map(_.maxY).max
     }
+  }
+  def minimumBoundingRectangle(objects: Set[Bounded]): Rectangle = {
+    implicit val doubleOrdering: Ordering[Double] = Ordering.Double.IeeeOrdering
+
+    def minX: Double = objects.map(_.minX).min
+    def maxX: Double = objects.map(_.maxX).max
+    def minY: Double = objects.map(_.minY).min
+    def maxY: Double = objects.map(_.maxY).max
+    val width: Double = maxX - minX
+    val height: Double = maxY - minY
+    val x: Double = maxX - width / 2
+    val y: Double = maxY - height / 2
+
+    Rectangle(x, y, width, height)
   }
 
   // Pattern matching and exhaustiveness checking
   def describe(x: Shape): String = x match {
     case Point(x, y) => s"Point(x = $x, y = $y)"
     case Circle(centerX, centerY, radius) => s"Circle(centerX = $centerX, centerY = $centerY, radius = $radius)"
+    case Rectangle(centerX, centerY, width, height) => s"Rectangle(centerX = $centerX, centerY = $centerY, width = $width, height = $height)"
   }
 
   // Singleton objects are defined using `object`.
