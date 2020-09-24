@@ -32,7 +32,12 @@ object ControlStructures {
   // Exercise. Implement a "Fizz-Buzz" https://en.wikipedia.org/wiki/Fizz_buzz function using the if-then-else,
   // returning "fizzbuzz" for numbers which divide with 15, "fizz" for those which divide by 3 and "buzz" for
   // those which divide with 5, and returning the input number as a string for other numbers:
-  def fizzBuzz1(n: Int): String = ???
+  def fizzBuzz1(n: Int): String = {
+    if (n % 15 == 0) "fizzbuzz"
+    else if (n % 5 == 0) "buzz"
+    else if (n % 3 == 0) "fizz"
+    else n.toString
+  }
 
   // Pattern Matching
   //
@@ -46,30 +51,50 @@ object ControlStructures {
   // }
 
   type ErrorMessage = String
+  def monthName1(x: Int): Either[ErrorMessage, String] = {
+    val names = Array("Jan", "Feb", "...")
+    names.lift(x - 1).toRight(if (x > 12) "too large" else "too small")
+  }
+
   def monthName(x: Int): Either[ErrorMessage, String] = {
     x match {
-      case 1            => Right("January")
-      case 2            => Right("February")
-      case 3            => Right("March")
-      case 4            => Right("April")
-      case 5            => Right("May")
-      case 6            => Right("June")
-      case 7            => Right("July")
-      case 8            => Right("August")
-      case 9            => Right("September")
-      case 10           => Right("October")
-      case 11           => Right("November")
-      case 12           => Right("December")
-      case x if x <= 0  => Left(s"Month $x is too small")
-      case x            => Left(s"Month $x is too large")
+      case 1 => Right("January")
+      case 2 => Right("February")
+      case 3 => Right("March")
+      case 4 => Right("April")
+      case 5 => Right("May")
+      case 6 => Right("June")
+      case 7 => Right("July")
+      case 8 => Right("August")
+      case 9 => Right("September")
+      case 10 => Right("October")
+      case 11 => Right("November")
+      case 12 => Right("December")
+      case x if x <= 0 => Left(s"Month $x is too small")
+      case x => Left(s"Month $x is too large")
     }
   }
+
 
   // Question. How would you improve `monthName`?
   // Question. What would you use in its place if you wanted to more properly handle multiple locales?
 
   // Exercise. Implement a "Fizz-Buzz" function using pattern matching:
-  def fizzBuzz2(n: Int): String = ???
+  def fizzBuzz2(x: Int): String = {
+    x match {
+      case x if x % 15 == 0 => "fizzbuzz"
+      case x if x % 5 == 0 => "buzz"
+      case x if x % 3 == 0 => "fizz"
+      case x => s"$x"
+    }
+  }
+
+  def fizzBuzz3(x: Int): String = (x % 5, x % 3) match {
+    case (0, 0) => "fizzbuzz"
+    case (0, _) => "buzz"
+    case (_, 0) => "fizz"
+    case _ => s"$x"
+  }
 
   // Recursion
   //
@@ -86,9 +111,9 @@ object ControlStructures {
   // @tailrec annotation verifies that a method will be compiled with tail call optimisation.
   @tailrec
   def last[A](list: List[A]): Option[A] = list match {
-    case Nil        => None
-    case x :: Nil   => Some(x)
-    case _ :: xs    => last(xs)
+    case Nil => None
+    case x :: Nil => Some(x)
+    case _ :: xs => last(xs)
   }
 
   // In reality, recursion isn't used that often as it can be replaced with `foldLeft`, `foldRight`,
@@ -138,6 +163,7 @@ object ControlStructures {
     class List[A] {
       def map[B](f: A => B): List[B] = ???
     }
+
   }
 
   // Question. What is the value of this code?
@@ -156,6 +182,7 @@ object ControlStructures {
     class List[A] {
       def flatMap[B](f: A => List[B]): List[B] = ???
     }
+
   }
 
   // Question. What is the value of this code?
@@ -168,9 +195,11 @@ object ControlStructures {
 
   // For example, for `List` it is defined as:
   object list_filter_example {
+
     class List[A] {
       def filter(p: A => Boolean): List[A] = ???
     }
+
   }
 
   // Question. What is the value of this code?
@@ -205,9 +234,9 @@ object ControlStructures {
 
   // You can also add `if` guards to `for` comprehensions:
   val e = for {
-    x       <- a
+    x <- a
     if x % 2 == 1
-    y       <- b
+    y <- b
   } yield x + y
 
   // Question. What is the value of `e` above?
@@ -275,8 +304,8 @@ object ControlStructures {
     try { // executed until an exception happens
       source.getLines() foreach println
     } catch { // exception handlers
-      case e: FileNotFoundException   => println(s"Couldn't find the file: $e")
-      case e: Exception               => println(s"Exception occurred: $e")
+      case e: FileNotFoundException => println(s"Couldn't find the file: $e")
+      case e: Exception => println(s"Exception occurred: $e")
     } finally { // executed even if an exception happens
       source.close
     }

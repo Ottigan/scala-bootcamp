@@ -1,6 +1,7 @@
 package com.evolutiongaming.bootcamp.basics
 
 object ClassesAndTraits {
+
   // You can follow your progress using the tests in `ClassesAndTraitsSpec`:
   //   sbt "testOnly com.evolutiongaming.bootcamp.basics.ClassesAndTraitsSpec"
 
@@ -37,7 +38,7 @@ object ClassesAndTraits {
   //
   // This makes code more reusable and testable.
 
-  sealed trait Shape extends Located with Bounded
+  sealed trait Shape[A] extends Located with Bounded with Movable[A]
 
   sealed trait Located {
     def x: Double
@@ -51,29 +52,33 @@ object ClassesAndTraits {
     def maxY: Double
   }
 
-  final case class Point(x: Double, y: Double) extends Shape {
+  final case class Point(x: Double, y: Double) extends Shape[Point] {
     override def minX: Double = x
     override def maxX: Double = x
     override def minY: Double = y
     override def maxY: Double = y
+    override def move(dx: Double, dy: Double): Point = Point(x + dx, y + dy)
   }
 
-  final case class Circle(centerX: Double, centerY: Double, radius: Double) extends Shape {
+  final case class Circle(centerX: Double, centerY: Double, radius: Double) extends Shape[Circle] {
     override def x: Double = centerX
     override def y: Double = centerY
     override def minX: Double = x - radius
     override def maxX: Double = x + radius
     override def minY: Double = y - radius
     override def maxY: Double = y + radius
+    override def move(dx: Double, dy: Double): Circle = Circle(x + dx, y + dy, radius)
   }
 
-  final case class Rectangle(centerX: Double, centerY: Double, width: Double, height: Double) extends Shape {
+  final case class Rectangle(centerX: Double, centerY: Double, width: Double, height: Double) extends Shape[Rectangle] {
     override def x: Double = centerX
     override def y: Double = centerY
     override def minX: Double = x - width / 2
     override def maxX: Double = x + width / 2
     override def minY: Double = y - height / 2
     override def maxY: Double = y + height / 2
+    override def move(dx: Double, dy: Double): Rectangle = Rectangle(x + dx, y + dy, width, height)
+
   }
 
   // Case Classes
@@ -89,16 +94,16 @@ object ClassesAndTraits {
   // - `equals` and `hashCode` methods are generated, which let you compare objects & use them in collections
   // - `toString` method is created for easier debugging purposes
 
-  val point2 = Point(1, 2)
+  val point2: Point = Point(1, 2)
   println(point2.x)
 
-  val shape: Shape = point2
-  val point2Description = shape match {
+  val shape: Point = point2
+  val point2Description: String = shape match {
     case Point(x, y) => s"x = $x, y = $y"
     case _ => "other shape"
   }
 
-  val point3 = point2.copy(x = 3)
+  val point3: Shape[Point] = point2.copy(x = 3)
   println(point3.toString) // Point(3, 2)
 
   // Exercise. Implement an algorithm for finding the minimum bounding rectangle
@@ -115,6 +120,7 @@ object ClassesAndTraits {
       override def maxY: Double = objects.map(_.maxY).max
     }
   }
+
   def minimumBoundingRectangle(objects: Set[Bounded]): Rectangle = {
     implicit val doubleOrdering: Ordering[Double] = Ordering.Double.IeeeOrdering
 
@@ -131,7 +137,7 @@ object ClassesAndTraits {
   }
 
   // Pattern matching and exhaustiveness checking
-  def describe(x: Shape): String = x match {
+  def describe[A](x: Shape[A]): String = x match {
     case Point(x, y) => s"Point(x = $x, y = $y)"
     case Circle(centerX, centerY, radius) => s"Circle(centerX = $centerX, centerY = $centerY, radius = $radius)"
     case Rectangle(centerX, centerY, width, height) => s"Rectangle(centerX = $centerX, centerY = $centerY, width = $width, height = $height)"
@@ -171,15 +177,35 @@ object ClassesAndTraits {
 
   // Question. Do you agree with how the stack is modelled here? What would you do differently?
   final case class Stack[A](elements: List[A] = Nil) {
-    def push(x: A): Stack[A] = ???
-    def peek: A = ???
-    def pop: (A, Stack[A]) = ???
+    def push(x: A): Stack[A] = Stack(x :: elements)
+    def peek: Option[A] = elements.headOption
+    def pop1: Option[(A, Stack[A])] = peek.map(x => (x, Stack(elements.tail)))
+    def pop2: Option[(A, Stack[A])] = peek match {
+      case None => None
+      case Some(x) => Some((x, Stack(elements.tail)))
+    }
+    def pop3: Option[(A, Stack[A])] = elements match {
+      case Nil => None
+      case x :: xs => Some((x, Stack(xs)))
+    }
   }
+
+  val stack = Stack("a" :: "b" :: Nil)
+  val stack1 = Stack(List("a", "b"))
+  val a1 = stack.peek
+  val retrieved1 = stack.pop1
+  val retrieved2 = stack.pop2
+  val retrieved3 = stack.pop3
 
   // Let us come back to our `Shape`-s and add a `Movable` trait
   // which will have a method:
   //
   //   def move(dx: Double, dy: Double)
+
+  sealed trait Movable[A] {
+    def move(dx: Double, dy: Double): A
+  }
+
   //
   // What should be the return type of the `move` method?
   //
