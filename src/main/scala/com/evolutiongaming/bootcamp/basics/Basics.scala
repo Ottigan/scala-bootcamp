@@ -329,7 +329,7 @@ object Basics {
     val xDouble = x.toDouble
     val nDouble = n.toDouble
     val result = Math.pow(xDouble, nDouble)
-    (result).toLong
+    result.toLong
   }
 
   def power1(n: Byte): Int => Long = { x: Int =>
