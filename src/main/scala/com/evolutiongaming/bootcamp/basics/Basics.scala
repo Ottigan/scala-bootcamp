@@ -260,7 +260,8 @@ object Basics {
   // Exercise. Implement `helloFunction` using `helloMethod` you implemented above. Why was the type
   // annotation skipped when defining `helloFunction`?
 
-  val helloFunction: String => String = (name: String) => /* implement here */ name
+  val helloFunction: String => String = (name: String) => helloMethod(name)
+  val helloFunction2: String => String = (name: String) => s"Hello, $name!"
 
   // Exercise. Using the aforementioned String `length` implement a `stringLength` function which returns
   // the length of the String passed.
