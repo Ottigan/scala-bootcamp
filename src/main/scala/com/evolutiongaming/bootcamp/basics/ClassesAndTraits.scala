@@ -1,7 +1,6 @@
 package com.evolutiongaming.bootcamp.basics
 
 object ClassesAndTraits {
-
   // You can follow your progress using the tests in `ClassesAndTraitsSpec`:
   //   sbt "testOnly com.evolutiongaming.bootcamp.basics.ClassesAndTraitsSpec"
 
@@ -20,7 +19,7 @@ object ClassesAndTraits {
 
   val point1 = new MutablePoint(3, 4)
   println(point1.x) // 3.0
-  println(point1) // (3.0, 4.0)
+  println(point1)   // (3.0, 4.0)
 
   // Question. Is MutablePoint a good design? Why or why not?
 
