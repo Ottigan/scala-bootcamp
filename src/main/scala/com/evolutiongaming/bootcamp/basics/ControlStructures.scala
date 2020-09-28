@@ -141,14 +141,26 @@ object ControlStructures {
   //
   // Thus `applyNTimesForInts(_ + 1, 4)(3)` should return `((((3 + 1) + 1) + 1) + 1)` or `7`.
   def applyNTimesForInts(f: Int => Int, n: Int): Int => Int = { x: Int =>
-    f(x + n) // replace with a correct implementation
+    @tailrec
+    def helper(x: Int, n: Int): Int = {
+      if (n == 1) f(x)
+      else helper(f(x), n - 1)
+    }
+
+    helper(f(x), n - 1)
   }
 
+
   // Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
-  def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
-    // replace with correct implementation
-    println(n)
-    f(x)
+  def applyNTimes[A](f: A => A, n: Int): A => A = {
+    x: A =>
+      @tailrec
+      def helper(x: A, n: Int): A = {
+        if (n == 1) f(x)
+        else helper(f(x), n - 1)
+      }
+
+      helper(f(x), n - 1)
   }
 
   // `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
@@ -259,9 +271,23 @@ object ControlStructures {
 
   // Upon success, should return the remaining amounts on both accounts (fromUser, toUser).
   def makeTransfer(service: UserService, fromUser: String, toUser: String, amount: Amount): Either[ErrorMessage, (Amount, Amount)] = {
-    // Replace with a proper implementation:
-    println(s"$service, $fromUser, $toUser, $amount")
-    ???
+
+    val valA = service.validateAmount(amount).isRight
+    val fromU = service.validateUserName(fromUser).isRight
+    val toU = service.validateUserName(toUser).isRight
+
+    if (valA && fromU && toU) {
+      for {
+        fromID <- service.findUserId(fromUser)
+        fromBalance <- service.findBalance(fromID)
+        toID <- service.findUserId(toUser)
+        toBalance <- service.findBalance(toID)
+        fromUpdated <- service.updateAccount(fromID, fromBalance, -amount)
+        toUpdated <- service.updateAccount(toID, toBalance, amount)
+      } yield (fromUpdated, toUpdated)
+
+    } else Left("Error")
+
   }
 
   // Question. What are the questions would you ask - especially about requirements - before implementing
@@ -276,14 +302,18 @@ object ControlStructures {
   // Exercise:
   //
   // Given:
-  //  A = Set(0, 1, 2)
-  //  B = Set(true, false)
+  // A = Set(0, 1, 2)
+  // B = Set(true, false)
   //
   // List all the elements in `A * B`.
   //
   // Use a "for comprehension" in your solution.
 
-  val AProductB: Set[(Int, Boolean)] = Set()
+  val AProductB: Set[(Int, Boolean)] =
+    for {
+      x <- Set(0, 1, 2)
+      y <- Set(true, false)
+    } yield (x, y)
 
   // Exercise:
   //
