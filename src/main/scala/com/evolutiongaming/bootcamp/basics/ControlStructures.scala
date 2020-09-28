@@ -276,26 +276,22 @@ object ControlStructures {
     // balances, and then updateAccount for both userId-s (with a positive and negative
     // amount, respectively):
     println(s"$service, $fromUserWithName, $toUserWithName, $amount")
-    ???
-  // Upon success, should return the remaining amounts on both accounts (fromUser, toUser).
-  def makeTransfer(service: UserService, fromUser: String, toUser: String, amount: Amount): Either[ErrorMessage, (Amount, Amount)] = {
 
     val valA = service.validateAmount(amount).isRight
-    val fromU = service.validateUserName(fromUser).isRight
-    val toU = service.validateUserName(toUser).isRight
+    val fromU = service.validateUserName(fromUserWithName).isRight
+    val toU = service.validateUserName(toUserWithName).isRight
 
     if (valA && fromU && toU) {
       for {
-        fromID <- service.findUserId(fromUser)
+        fromID <- service.findUserId(fromUserWithName)
         fromBalance <- service.findBalance(fromID)
-        toID <- service.findUserId(toUser)
+        toID <- service.findUserId(toUserWithName)
         toBalance <- service.findBalance(toID)
         fromUpdated <- service.updateAccount(fromID, fromBalance, -amount)
         toUpdated <- service.updateAccount(toID, toBalance, amount)
       } yield (fromUpdated, toUpdated)
 
     } else Left("Error")
-
   }
 
   // Question. What are the questions would you ask - especially about requirements - before implementing
@@ -392,15 +388,23 @@ object ControlStructures {
   // output a single line starting with "Error: "
 
   sealed trait Command
+
   object Command {
+
     final case class Divide(dividend: Double, divisor: Double) extends Command
+
     final case class Sum(numbers: List[Double]) extends Command
+
     final case class Average(numbers: List[Double]) extends Command
+
     final case class Min(numbers: List[Double]) extends Command
+
     final case class Max(numbers: List[Double]) extends Command
+
   }
 
   sealed trait Result
+
   case class ChangeMe(value: String) extends Result // adjust Result as required to match requirements
 
   def parseCommand(x: String): Either[ErrorMessage, Command] = {
