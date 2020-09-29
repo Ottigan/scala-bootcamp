@@ -19,7 +19,7 @@ object ClassesAndTraits {
 
   val point1 = new MutablePoint(3, 4)
   println(point1.x) // 3.0
-  println(point1)   // (3.0, 4.0)
+  println(point1) // (3.0, 4.0)
 
   // Question. Is MutablePoint a good design? Why or why not?
 
@@ -77,7 +77,6 @@ object ClassesAndTraits {
     override def minY: Double = y - height / 2
     override def maxY: Double = y + height / 2
     override def move(dx: Double, dy: Double): Rectangle = Rectangle(x + dx, y + dy, width, height)
-
   }
 
   // Case Classes
@@ -99,7 +98,7 @@ object ClassesAndTraits {
   val shape: Point = point2
   val point2Description: String = shape match {
     case Point(x, y) => s"x = $x, y = $y"
-    case _ => "other shape"
+    case _           => "other shape"
   }
 
   val point3: Shape[Point] = point2.copy(x = 3)
@@ -137,8 +136,8 @@ object ClassesAndTraits {
 
   // Pattern matching and exhaustiveness checking
   def describe[A](x: Shape[A]): String = x match {
-    case Point(x, y) => s"Point(x = $x, y = $y)"
-    case Circle(centerX, centerY, radius) => s"Circle(centerX = $centerX, centerY = $centerY, radius = $radius)"
+    case Point(x, y)                                => s"Point(x = $x, y = $y)"
+    case Circle(centerX, centerY, radius)           => s"Circle(centerX = $centerX, centerY = $centerY, radius = $radius)"
     case Rectangle(centerX, centerY, width, height) => s"Rectangle(centerX = $centerX, centerY = $centerY, width = $width, height = $height)"
   }
 
@@ -180,11 +179,11 @@ object ClassesAndTraits {
     def peek: Option[A] = elements.headOption
     def pop1: Option[(A, Stack[A])] = peek.map(x => (x, Stack(elements.tail)))
     def pop2: Option[(A, Stack[A])] = peek match {
-      case None => None
+      case None    => None
       case Some(x) => Some((x, Stack(elements.tail)))
     }
     def pop3: Option[(A, Stack[A])] = elements match {
-      case Nil => None
+      case Nil     => None
       case x :: xs => Some((x, Stack(xs)))
     }
   }

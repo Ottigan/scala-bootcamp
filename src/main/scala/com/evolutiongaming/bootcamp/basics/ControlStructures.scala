@@ -58,20 +58,20 @@ object ControlStructures {
 
   def monthName(x: Int): Either[ErrorMessage, String] = {
     x match {
-      case 1            => Right("January")
-      case 2            => Right("February")
-      case 3            => Right("March")
-      case 4            => Right("April")
-      case 5            => Right("May")
-      case 6            => Right("June")
-      case 7            => Right("July")
-      case 8            => Right("August")
-      case 9            => Right("September")
-      case 10           => Right("October")
-      case 11           => Right("November")
-      case 12           => Right("December")
-      case x if x <= 0  => Left(s"Month $x is too small")
-      case x            => Left(s"Month $x is too large")
+      case 1           => Right("January")
+      case 2           => Right("February")
+      case 3           => Right("March")
+      case 4           => Right("April")
+      case 5           => Right("May")
+      case 6           => Right("June")
+      case 7           => Right("July")
+      case 8           => Right("August")
+      case 9           => Right("September")
+      case 10          => Right("October")
+      case 11          => Right("November")
+      case 12          => Right("December")
+      case x if x <= 0 => Left(s"Month $x is too small")
+      case x           => Left(s"Month $x is too large")
     }
   }
 
@@ -83,9 +83,9 @@ object ControlStructures {
   def fizzBuzz2(x: Int): String = {
     x match {
       case x if x % 15 == 0 => "fizzbuzz"
-      case x if x % 5 == 0 => "buzz"
-      case x if x % 3 == 0 => "fizz"
-      case x => s"$x"
+      case x if x % 5 == 0  => "buzz"
+      case x if x % 3 == 0  => "fizz"
+      case x                => s"$x"
     }
   }
 
@@ -93,7 +93,7 @@ object ControlStructures {
     case (0, 0) => "fizzbuzz"
     case (0, _) => "buzz"
     case (_, 0) => "fizz"
-    case _ => s"$x"
+    case _      => s"$x"
   }
 
   // Recursion
@@ -111,9 +111,9 @@ object ControlStructures {
   // @tailrec annotation verifies that a method will be compiled with tail call optimisation.
   @tailrec
   def last[A](list: List[A]): Option[A] = list match {
-    case Nil        => None
-    case x :: Nil   => Some(x)
-    case _ :: xs    => last(xs)
+    case Nil      => None
+    case x :: Nil => Some(x)
+    case _ :: xs  => last(xs)
   }
 
   // Recursion isn't used that often as it can be replaced with `foldLeft`, `foldRight`,
@@ -286,7 +286,6 @@ object ControlStructures {
         fromUpdated <- service.updateAccount(fromID, fromBalance, -amount)
         toUpdated <- service.updateAccount(toID, toBalance, amount)
       } yield (fromUpdated, toUpdated)
-
     } else Left("Error")
   }
 
@@ -332,8 +331,8 @@ object ControlStructures {
     try { // executed until an exception happens
       source.getLines() foreach println
     } catch { // exception handlers
-      case e: FileNotFoundException   => println(s"Couldn't find the file: $e")
-      case e: Exception               => println(s"Exception occurred: $e")
+      case e: FileNotFoundException => println(s"Couldn't find the file: $e")
+      case e: Exception             => println(s"Exception occurred: $e")
     } finally { // executed even if an exception happens
       source.close
     }

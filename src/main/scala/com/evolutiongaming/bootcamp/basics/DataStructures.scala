@@ -48,7 +48,7 @@ object DataStructures {
 
   val joinLists = immutableList2 ::: List(8, 9) // 1 :: 2 :: 3 :: 8 :: 9 :: Nil
 
-  val headOfList1 = Try(emptyList1.head)// what will happen here?!
+  val headOfList1 = Try(emptyList1.head) // what will happen here?!
   val headOfList2 = emptyList1.headOption // None
   val headOfList3 = immutableList2.headOption // Some(1)
 
