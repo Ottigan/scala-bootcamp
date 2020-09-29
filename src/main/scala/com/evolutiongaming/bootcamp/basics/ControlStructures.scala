@@ -51,6 +51,7 @@ object ControlStructures {
   // }
 
   type ErrorMessage = String
+
   def monthName1(x: Int): Either[ErrorMessage, String] = {
     val names = Array("Jan", "Feb", "...")
     names.lift(x - 1).toRight(if (x > 12) "too large" else "too small")
@@ -75,7 +76,6 @@ object ControlStructures {
     }
   }
 
-
   // Question. How would you improve `monthName`?
   // Question. What would you use in its place if you wanted to more properly handle multiple locales?
 
@@ -85,7 +85,7 @@ object ControlStructures {
       case x if x % 15 == 0 => "fizzbuzz"
       case x if x % 5 == 0  => "buzz"
       case x if x % 3 == 0  => "fizz"
-      case x                => s"$x"
+      case x => s"$x"
     }
   }
 
@@ -104,6 +104,11 @@ object ControlStructures {
   def sum1(list: List[Int]): Int = {
     if (list.isEmpty) 0
     else list.head + sum1(list.tail)
+  }
+
+  def sumMatch(list: List[Int]): Int = list match {
+    case Nil     => 0
+    case x :: xs => x + sumMatch(xs)
   }
 
   // Question. What are the risks of recursion when applied without sufficient foresight?
@@ -128,7 +133,7 @@ object ControlStructures {
   }
 
   def sum4(list: List[Int]): Int = {
-    if (list.isEmpty) 0
+    if (list.isEmpty) 0 // reduce will crash for empty List
     else list.reduce((a, b) => a + b)
   }
 
@@ -150,17 +155,20 @@ object ControlStructures {
     helper(f(x), n - 1)
   }
 
-
   // Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
-  def applyNTimes[A](f: A => A, n: Int): A => A = {
-    x: A =>
-      @tailrec
-      def helper(x: A, n: Int): A = {
-        if (n == 1) f(x)
-        else helper(f(x), n - 1)
-      }
+  def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
+    @tailrec
+    def helper(x: A, n: Int): A = {
+      if (n == 1) f(x)
+      else helper(f(x), n - 1)
+    }
 
-      helper(f(x), n - 1)
+    helper(f(x), n - 1)
+  }
+
+  def applyNTimesAlt[A](f: A => A, n: Int): A => A = { x: A =>
+    if (n == 0) x
+    else applyNTimesAlt[A](f, n - 1)(f(x))
   }
 
   // `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
@@ -175,6 +183,7 @@ object ControlStructures {
     class List[A] {
       def map[B](f: A => B): List[B] = ???
     }
+
   }
 
   // Question. What is the value of this code?
@@ -193,6 +202,7 @@ object ControlStructures {
     class List[A] {
       def flatMap[B](f: A => List[B]): List[B] = ???
     }
+
   }
 
   // Question. What is the value of this code?
@@ -205,9 +215,11 @@ object ControlStructures {
 
   // For example, for `List` it is defined as:
   object list_filter_example {
+
     class List[A] {
       def filter(p: A => Boolean): List[A] = ???
     }
+
   }
 
   // Question. What is the value of this code?
@@ -257,8 +269,11 @@ object ControlStructures {
 
   trait UserService {
     def validateUserName(name: String): Either[ErrorMessage, Unit]
+
     def findUserId(name: String): Either[ErrorMessage, UserId]
+
     def validateAmount(amount: Amount): Either[ErrorMessage, Unit]
+
     def findBalance(userId: UserId): Either[ErrorMessage, Amount]
 
     /** Upon success, returns the resulting balance */
@@ -266,27 +281,29 @@ object ControlStructures {
   }
 
   // Upon success, should return the remaining amounts on both accounts as a tuple.
-  def makeTransfer(service: UserService, fromUserWithName: String, toUserWithName: String, amount: Amount): Either[ErrorMessage, (Amount, Amount)] = {
+  def makeTransfer(
+      service: UserService,
+      fromUserWithName: String,
+      toUserWithName: String,
+      amount: Amount
+  ): Either[ErrorMessage, (Amount, Amount)] = {
     // Replace with a proper implementation that uses validateUserName on each name,
     // findUserId to find UserId, validateAmount on the amount, findBalance to find previous
     // balances, and then updateAccount for both userId-s (with a positive and negative
     // amount, respectively):
-    println(s"$service, $fromUserWithName, $toUserWithName, $amount")
+    import service._ // to avoid constantly calling service.something
 
-    val valA = service.validateAmount(amount).isRight
-    val fromU = service.validateUserName(fromUserWithName).isRight
-    val toU = service.validateUserName(toUserWithName).isRight
-
-    if (valA && fromU && toU) {
-      for {
-        fromID <- service.findUserId(fromUserWithName)
-        fromBalance <- service.findBalance(fromID)
-        toID <- service.findUserId(toUserWithName)
-        toBalance <- service.findBalance(toID)
-        fromUpdated <- service.updateAccount(fromID, fromBalance, -amount)
-        toUpdated <- service.updateAccount(toID, toBalance, amount)
-      } yield (fromUpdated, toUpdated)
-    } else Left("Error")
+    for {
+      _           <- validateAmount(amount)
+      _           <- validateUserName(fromUserWithName)
+      _           <- validateUserName(toUserWithName)
+      fromID      <- findUserId(fromUserWithName)
+      fromBalance <- findBalance(fromID)
+      toID        <- findUserId(toUserWithName)
+      toBalance   <- findBalance(toID)
+      fromUpdated <- updateAccount(fromID, fromBalance, -amount)
+      toUpdated   <- updateAccount(toID, toBalance, amount)
+    } yield (fromUpdated, toUpdated)
   }
 
   // Question. What are the questions would you ask - especially about requirements - before implementing
@@ -315,14 +332,16 @@ object ControlStructures {
   // Exercise:
   //
   // Given:
-  // A = { 0, 1, 2 }
-  // B = { true, false }
+  val A = Set(0, 1, 2)
+  val B = Set(true, false)
   //
   // List all the elements in `A + B`.
   //
   // Use "map" and `++` (`Set` union operation) in your solution.
 
-  val ASumB: Set[Either[Int, Boolean]] = Set()
+  val ASumB: Set[Either[Int, Boolean]]  = A.map(Left(_)) ++ B.map(Right(_))
+  val ASumB1: Set[Either[Int, Boolean]] = A.map(x => Left(x)) ++ B.map(x => Right(x))
+  val ASumB2: Set[Either[Int, Boolean]] = A.map(Left.apply) ++ B.map(Right.apply)
 
   // Scala inherits the standard try-catch-finally construct from Java:
   def printFile(fileName: String): Unit = {
@@ -347,7 +366,9 @@ object ControlStructures {
 
   // One of these other mechanisms is `Try` which can be thought of as an `Either[Throwable, A]`:
 
-  def parseInt1(x: String): Try[Int] = Try(x.toInt)
+  def parseInt1(x: String): Try[Int]              = Try(x.toInt)
+  def parseInt2(x: String): Option[Int]           = x.toIntOption
+  def parseInt3(x: String, default: Int = 0): Int = x.toIntOption.getOrElse(default)
 
   parseInt1("asdf") match {
     case Success(value) => println(value)
