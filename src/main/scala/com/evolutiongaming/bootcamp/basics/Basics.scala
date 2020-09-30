@@ -170,7 +170,7 @@ object Basics {
    */
 
   // Unit is a special type with only one possible value - `()`
-  val unit1: Unit              = ()
+  val unit1: Unit = ()
   val allUnitValues: Set[Unit] = Set(())
 
   // Where `void` is used in Java to indicate that a method doesn't return a value,
@@ -245,8 +245,8 @@ object Basics {
 
   // Methods can have default parameters
   def addNTimes(x: Int, y: Int, times: Int = 1): Int = x + y * times
-  val sum2                                           = addNTimes(2, 3)    // 5, because 2 + 3 * 1
-  val sum3                                           = addNTimes(2, 3, 4) // 14, because 2 + 3 * 4
+  val sum2 = addNTimes(2, 3) // 5, because 2 + 3 * 1
+  val sum3 = addNTimes(2, 3, 4) // 14, because 2 + 3 * 4
 
   // Functions are defined with the following syntax:
   //
@@ -260,12 +260,12 @@ object Basics {
   // Exercise. Implement `helloFunction` using `helloMethod` you implemented above. Why was the type
   // annotation skipped when defining `helloFunction`?
 
-  val helloFunction: String => String  = (name: String) => helloMethod(name)
+  val helloFunction: String => String = (name: String) => helloMethod(name)
   val helloFunction2: String => String = (name: String) => s"Hello, $name!"
 
   // Exercise. Using the aforementioned String `length` implement a `stringLength` function which returns
   // the length of the String passed.
-  val stringLength: String => Int  = (s: String) => s.length
+  val stringLength: String => Int = (s: String) => s.length
   val stringLength2: String => Int = _.length
 
   // If each argument of a function is used exactly once, you can use `_` to refer to them
@@ -307,10 +307,10 @@ object Basics {
   }
 
   val hello: String => String = greeter("Hello")
-  val helloWorld: String      = hello("World") // Hello, World!
+  val helloWorld: String = hello("World") // Hello, World!
 
   val goodMorning: String => String = greeter("Good morning")
-  val goodMorningWorld: String      = goodMorning("World") // Good morning, World!
+  val goodMorningWorld: String = goodMorning("World") // Good morning, World!
 
   // A more convoluted example:
   def formatNamedDouble(name: String, format: Double => String): Double => String = { x: Double =>
@@ -318,7 +318,7 @@ object Basics {
   }
 
   val fourDecimalPlaces: Double => String = (x: Double) => f"$x%.4f"
-  val formattedNamedDouble: String        = formatNamedDouble("x", fourDecimalPlaces)(Math.PI) // x = 3.1416
+  val formattedNamedDouble: String = formatNamedDouble("x", fourDecimalPlaces)(Math.PI) // x = 3.1416
 
   // Exercise. Implement `power` method which takes a Byte `n` and returns a function from Int to
   // Long, raising the Int parameter provided to the n-th power using `Math.pow`.
@@ -328,7 +328,7 @@ object Basics {
   def power(n: Byte): Int => Long = { x: Int =>
     val xDouble = x.toDouble
     val nDouble = n.toDouble
-    val result  = Math.pow(xDouble, nDouble)
+    val result = Math.pow(xDouble, nDouble)
     result.toLong
   }
 
@@ -357,9 +357,9 @@ object Basics {
   // experience with it, it will often help you write simpler, more maintainable code.
 
   val commasForThousands: Long => String = (x: Long) => f"$x%,d"
-  val formattedLong: String              = formatNamedValue("y", commasForThousands)(123456)    // y = 123,456
-  val formattedLong2: String             = formatNamedValue("y", (x: Long) => f"$x%,d")(123456) // y = 123,456
-  val formattedLong3: String             = formatNamedValue[Long]("y", x => f"$x%,d")(123456)   // y = 123,456
+  val formattedLong: String = formatNamedValue("y", commasForThousands)(123456) // y = 123,456
+  val formattedLong2: String = formatNamedValue("y", (x: Long) => f"$x%,d")(123456) // y = 123,456
+  val formattedLong3: String = formatNamedValue[Long]("y", x => f"$x%,d")(123456) // y = 123,456
 
   // Question: What is `A` for `formatNamedValue` in this `formattedLong` invocation of it?
 
@@ -374,12 +374,12 @@ object Basics {
   //
   // A tuple is a value that contains a fixed number of elements, each with a distinct type. Tuples are immutable.
 
-  val tuple1: (String, Double)      = ("Pepper", 4.5)
+  val tuple1: (String, Double) = ("Pepper", 4.5)
   val tuple2: (String, Double, Int) = ("Onions", 2.24, 16)
 
   // Tuples are sometimes useful but should not be over-used as their elements aren't named.
   // Tuple elements can be accessed using `._1`, `._2` and similar, for example:
-  val pepper1      = tuple1._1
+  val pepper1 = tuple1._1
   val pepperPrice1 = tuple1._2
 
   // However this should be done sparingly and instead preferring the following destructuring form:
@@ -394,7 +394,7 @@ object Basics {
   // None or an instance of Some containing a value.
 
   val nameUnknown: Option[String] = None
-  val nameKnown: Option[String]   = Some("Name")
+  val nameKnown: Option[String] = Some("Name")
 
   // Either
   //
@@ -403,7 +403,7 @@ object Basics {
   //
   // Commonly, Left is used to indicate an error while Right to indicate a normal execution.
 
-  val errorOccurred: Either[String, Int]   = Left("Failed to parse")
+  val errorOccurred: Either[String, Int] = Left("Failed to parse")
   val normalExecution: Either[String, Int] = Right(4)
 
   // More exercises to help internalise the "types define the set of possible values that a value can have":

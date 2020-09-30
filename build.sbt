@@ -53,7 +53,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
   "org.mockito" %% "mockito-scala" % "1.15.0" % Test,
   "org.scalaj" %% "scalaj-http" % "2.4.2" % Test,
-  "org.tpolecat" %% "doobie-scalatest" % doobieVersion % Test,
+  "org.tpolecat" %% "doobie-scalatest" % doobieVersion % Test
 )
 
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)

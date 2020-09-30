@@ -85,7 +85,7 @@ object ControlStructures {
       case x if x % 15 == 0 => "fizzbuzz"
       case x if x % 5 == 0  => "buzz"
       case x if x % 3 == 0  => "fizz"
-      case x => s"$x"
+      case x                => s"$x"
     }
   }
 
@@ -124,22 +124,16 @@ object ControlStructures {
   // Recursion isn't used that often as it can be replaced with `foldLeft`, `foldRight`,
   // `reduce` or other larger building blocks.
 
-  def sum2(list: List[Int]): Int = {
-    list.foldLeft(0)((acc, x) => acc + x)
-  }
+  def sum2(list: List[String]): String = list.foldLeft("")((acc, x) => acc + x)
 
-  def sum3(list: List[Int]): Int = {
-    list.foldRight(0)((x, acc) => acc + x)
-  }
+  def sum3(list: List[String]): String = list.foldRight("")((x, acc) => acc + x)
 
-  def sum4(list: List[Int]): Int = {
-    if (list.isEmpty) 0 // reduce will crash for empty List
+  def sum4(list: List[String]): String = {
+    if (list.isEmpty) "Empty" // reduce will crash for empty List
     else list.reduce((a, b) => a + b)
   }
 
-  def sum5(list: List[Int]): Int = {
-    list.sum // only for Numeric lists
-  }
+  def sum5(list: List[Int]): Int = list.sum // only for Numeric lists
 
   // Exercise: Implement a function `applyNTimes` which takes a function `f` and an integer `n` and
   // returns a function which applies the function `f` `n` times.
@@ -156,7 +150,7 @@ object ControlStructures {
   }
 
   // Exercise: Convert the function `applyNTimesForInts` into a polymorphic function `applyNTimes`:
-  def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
+  def applyNTimesAlt[A](f: A => A, n: Int): A => A = { x: A =>
     @tailrec
     def helper(x: A, n: Int): A = {
       if (n == 1) f(x)
@@ -166,9 +160,9 @@ object ControlStructures {
     helper(f(x), n - 1)
   }
 
-  def applyNTimesAlt[A](f: A => A, n: Int): A => A = { x: A =>
+  def applyNTimes[A](f: A => A, n: Int): A => A = { x: A =>
     if (n == 0) x
-    else applyNTimesAlt[A](f, n - 1)(f(x))
+    else applyNTimes[A](f, n - 1)(f(x))
   }
 
   // `map`, `flatMap` and `filter` are not control structures, but methods that various collections (and
@@ -339,7 +333,7 @@ object ControlStructures {
   //
   // Use "map" and `++` (`Set` union operation) in your solution.
 
-  val ASumB: Set[Either[Int, Boolean]]  = A.map(Left(_)) ++ B.map(Right(_))
+  val ASumB: Set[Either[Int, Boolean]] = A.map(Left(_)) ++ B.map(Right(_))
   val ASumB1: Set[Either[Int, Boolean]] = A.map(x => Left(x)) ++ B.map(x => Right(x))
   val ASumB2: Set[Either[Int, Boolean]] = A.map(Left.apply) ++ B.map(Right.apply)
 
@@ -366,8 +360,8 @@ object ControlStructures {
 
   // One of these other mechanisms is `Try` which can be thought of as an `Either[Throwable, A]`:
 
-  def parseInt1(x: String): Try[Int]              = Try(x.toInt)
-  def parseInt2(x: String): Option[Int]           = x.toIntOption
+  def parseInt1(x: String): Try[Int] = Try(x.toInt)
+  def parseInt2(x: String): Option[Int] = x.toIntOption
   def parseInt3(x: String, default: Int = 0): Int = x.toIntOption.getOrElse(default)
 
   parseInt1("asdf") match {

@@ -19,7 +19,7 @@ object ClassesAndTraits {
 
   val point1 = new MutablePoint(3, 4)
   println(point1.x) // 3.0
-  println(point1)   // (3.0, 4.0)
+  println(point1) // (3.0, 4.0)
 
   // Question. Is MutablePoint a good design? Why or why not?
 
@@ -52,31 +52,30 @@ object ClassesAndTraits {
   }
 
   final case class Point(x: Double, y: Double) extends Shape[Point] {
-    override def minX: Double                        = x
-    override def maxX: Double                        = x
-    override def minY: Double                        = y
-    override def maxY: Double                        = y
+    override def minX: Double = x
+    override def maxX: Double = x
+    override def minY: Double = y
+    override def maxY: Double = y
     override def move(dx: Double, dy: Double): Point = Point(x + dx, y + dy)
   }
 
   final case class Circle(centerX: Double, centerY: Double, radius: Double) extends Shape[Circle] {
-    override def x: Double                            = centerX
-    override def y: Double                            = centerY
-    override def minX: Double                         = x - radius
-    override def maxX: Double                         = x + radius
-    override def minY: Double                         = y - radius
-    override def maxY: Double                         = y + radius
+    override def x: Double = centerX
+    override def y: Double = centerY
+    override def minX: Double = x - radius
+    override def maxX: Double = x + radius
+    override def minY: Double = y - radius
+    override def maxY: Double = y + radius
     override def move(dx: Double, dy: Double): Circle = Circle(x + dx, y + dy, radius)
   }
 
-  final case class Rectangle(centerX: Double, centerY: Double, width: Double, height: Double)
-      extends Shape[Rectangle] {
-    override def x: Double                               = centerX
-    override def y: Double                               = centerY
-    override def minX: Double                            = x - width / 2
-    override def maxX: Double                            = x + width / 2
-    override def minY: Double                            = y - height / 2
-    override def maxY: Double                            = y + height / 2
+  final case class Rectangle(centerX: Double, centerY: Double, width: Double, height: Double) extends Shape[Rectangle] {
+    override def x: Double = centerX
+    override def y: Double = centerY
+    override def minX: Double = x - width / 2
+    override def maxX: Double = x + width / 2
+    override def minY: Double = y - height / 2
+    override def maxY: Double = y + height / 2
     override def move(dx: Double, dy: Double): Rectangle = Rectangle(x + dx, y + dy, width, height)
   }
 
@@ -123,22 +122,22 @@ object ClassesAndTraits {
   def minimumBoundingRectangle(objects: Set[Bounded]): Rectangle = {
     implicit val doubleOrdering: Ordering[Double] = Ordering.Double.IeeeOrdering
 
-    def minX: Double   = objects.map(_.minX).min
-    def maxX: Double   = objects.map(_.maxX).max
-    def minY: Double   = objects.map(_.minY).min
-    def maxY: Double   = objects.map(_.maxY).max
-    val width: Double  = maxX - minX
+    def minX: Double = objects.map(_.minX).min
+    def maxX: Double = objects.map(_.maxX).max
+    def minY: Double = objects.map(_.minY).min
+    def maxY: Double = objects.map(_.maxY).max
+    val width: Double = maxX - minX
     val height: Double = maxY - minY
-    val x: Double      = maxX - width / 2
-    val y: Double      = maxY - height / 2
+    val x: Double = maxX - width / 2
+    val y: Double = maxY - height / 2
 
     Rectangle(x, y, width, height)
   }
 
   // Pattern matching and exhaustiveness checking
   def describe[A](x: Shape[A]): String = x match {
-    case Point(x, y) => s"Point(x = $x, y = $y)"
-    case Circle(centerX, centerY, radius) =>
+    case Point(x, y)                                => s"Point(x = $x, y = $y)"
+    case Circle(centerX, centerY, radius)           =>
       s"Circle(centerX = $centerX, centerY = $centerY, radius = $radius)"
     case Rectangle(centerX, centerY, width, height) =>
       s"Rectangle(centerX = $centerX, centerY = $centerY, width = $width, height = $height)"
@@ -178,8 +177,8 @@ object ClassesAndTraits {
 
   // Question. Do you agree with how the stack is modelled here? What would you do differently?
   final case class Stack[A](elements: List[A] = Nil) {
-    def push(x: A): Stack[A]        = Stack(x :: elements)
-    def peek: Option[A]             = elements.headOption
+    def push(x: A): Stack[A] = Stack(x :: elements)
+    def peek: Option[A] = elements.headOption
     def pop1: Option[(A, Stack[A])] = peek.map(x => (x, Stack(elements.tail)))
     def pop2: Option[(A, Stack[A])] = peek match {
       case None    => None
@@ -191,9 +190,9 @@ object ClassesAndTraits {
     }
   }
 
-  val stack      = Stack("a" :: "b" :: Nil)
-  val stack1     = Stack(List("a", "b"))
-  val a1         = stack.peek
+  val stack = Stack("a" :: "b" :: Nil)
+  val stack1 = Stack(List("a", "b"))
+  val a1 = stack.peek
   val retrieved1 = stack.pop1
   val retrieved2 = stack.pop2
   val retrieved3 = stack.pop3
