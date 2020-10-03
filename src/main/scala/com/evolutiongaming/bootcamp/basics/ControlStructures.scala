@@ -106,6 +106,8 @@ object ControlStructures {
     else list.head + sum1(list.tail)
   }
 
+  // Question. What are the risks of List#head and List#tail? How can you refactor `sum1` to avoid these invocations?
+
   def sumMatch(list: List[Int]): Int = list match {
     case Nil     => 0
     case x :: xs => x + sumMatch(xs)
@@ -177,7 +179,6 @@ object ControlStructures {
     class List[A] {
       def map[B](f: A => B): List[B] = ???
     }
-
   }
 
   // Question. What is the value of this code?
@@ -196,7 +197,6 @@ object ControlStructures {
     class List[A] {
       def flatMap[B](f: A => List[B]): List[B] = ???
     }
-
   }
 
   // Question. What is the value of this code?
@@ -209,11 +209,9 @@ object ControlStructures {
 
   // For example, for `List` it is defined as:
   object list_filter_example {
-
     class List[A] {
       def filter(p: A => Boolean): List[A] = ???
     }
-
   }
 
   // Question. What is the value of this code?
@@ -263,11 +261,8 @@ object ControlStructures {
 
   trait UserService {
     def validateUserName(name: String): Either[ErrorMessage, Unit]
-
     def findUserId(name: String): Either[ErrorMessage, UserId]
-
     def validateAmount(amount: Amount): Either[ErrorMessage, Unit]
-
     def findBalance(userId: UserId): Either[ErrorMessage, Amount]
 
     /** Upon success, returns the resulting balance */
