@@ -15,7 +15,8 @@ object Functions {
   def mkUpperCase(message: String): String = message.toUpperCase
 
   // Pass our logic as a parameter `f`
-  def processText(message: String, f: String => String): String = f.apply(message)
+  def processText(message: String, f: String => String): String =
+    f.apply(message)
 
   def clean2(message: String): String = {
     // `s` is a parameter and may be omitted
@@ -40,7 +41,6 @@ object Functions {
 
   // --
 
-
   // In Scala, every concrete type is a type of some class or trait
   // `(String => String)` is the same as scala.Function1[String, String]
   // `scala.Function1[A, B]` is a trait, where `A` and `B` are type parameters
@@ -63,15 +63,17 @@ object Functions {
   processText("some text", _ + "!!")
 
   // Anonymous function expands to implementation of scala.Function1 trait
-  processText("some text", new Function1[String, String] {
-    override def apply(v1: String): String = v1 + "!!"
-  })
+  processText(
+    "some text",
+    new Function1[String, String] {
+      override def apply(v1: String): String = v1 + "!!"
+    }
+  )
 
   // Method can be passed as a function, but it is not a function value, it's just converted automatically
   def trimAndWrap(v: String): String = s"<${v.trim}>"
 
   processText("xxx", trimAndWrap)
-
 
   // Subclassing Functions
   // One nice aspect of functions being traits is that we can subclass the function type
@@ -102,7 +104,6 @@ object Functions {
 
   // --
 
-
   // The pattern matching block expands to the Function1 instance
   val pingPong: String => String = {
     case "ping" => "pong"
@@ -123,19 +124,19 @@ object Functions {
   pingPongPF.isDefinedAt("ping") // > true
   pingPongPF.isDefinedAt("hi") // > false
 
-
   // If expected type is a PF then a pattern matching block will expended to PF implementation
 
-  val pingPongPFImpl: PartialFunction[String, String] = new PartialFunction[String, String] {
-    override def isDefinedAt(x: String): Boolean = x match {
-      case "ping" => true
-      case _ => false
-    }
+  val pingPongPFImpl: PartialFunction[String, String] =
+    new PartialFunction[String, String] {
+      override def isDefinedAt(x: String): Boolean = x match {
+        case "ping" => true
+        case _      => false
+      }
 
-    override def apply(v: String): String = v match {
-      case "ping" => "pong"
+      override def apply(v: String): String = v match {
+        case "ping" => "pong"
+      }
     }
-  }
 
   // Question. What do you expect?
 
@@ -148,7 +149,7 @@ object Functions {
   val result1: Boolean = f1.isDefinedAt(List("false", "true"))
 
   val f2: PartialFunction[List[String], Boolean] = {
-    case Nil => false
+    case Nil            => false
     // head :: 2nd :: tail
     case _ :: _ :: tail => f1(tail)
   }
@@ -157,7 +158,6 @@ object Functions {
   val result2: Boolean = f2.isDefinedAt(List("false", "true"))
 
   // --
-
 
   // We can make a function that returns another function
   // Example.
@@ -180,10 +180,10 @@ object Functions {
   val result = fromRuToEn("функция")
 
   // Multiple parameter lists ~ syntax sugar for functions returning a function
-  def translateM(from: Language)(to: Language)(message: String): String = translate(message, from, to)
+  def translateM(from: Language)(to: Language)(message: String): String =
+    translate(message, from, to)
 
   // --
-
 
   // Functions can be used as building blocks of our program using the composition of functions
   // `scala.Function1[A, B]` has `compose` and `andThen` methods that takes a function param and returns a new function
@@ -204,16 +204,12 @@ object Functions {
   List(1, 2, 3).map(_ + 2).map(_.toString)
   List(1, 2, 3).map(((x: Int) => x + 2).andThen(x => x.toString))
 
-
   // Exercise. Implement `andThen` and `compose` which pipes the result of one function to the input of another function
   def compose[A, B, C](f: B => C, g: A => B): A => C = ???
 
   def andThen[A, B, C](f: A => B, g: B => C): A => C = ???
 
-
   // --
-
-
 
   // Pure functions are mappings between two sets
 
@@ -249,7 +245,6 @@ object Functions {
 
   // A function without side effects only returns a value
 
-
   // Exercise. Provide an example of pure functions
   // Question. If a function return for all inputs the same value, is this function pure?
 
@@ -261,9 +256,9 @@ object Functions {
   // Potential compiler optimisations
   // Make parallel processing easier
 
-
   // Exercises. Convert the following function into a pure function.
-  type ??? = Nothing // just to make it compile and indicate that return type should be changed
+  type ??? =
+    Nothing // just to make it compile and indicate that return type should be changed
 
   //
   def parseDate(s: String): Instant = Instant.parse(s)
@@ -280,11 +275,11 @@ object Functions {
     count += 1
     newId
   }
-  def idPure(/* ??? */): (Int, Int) = ???
+  def idPure( /* ??? */ ): (Int, Int) = ???
 
   //
   def isAfterNow(date: Instant): Boolean = date.isAfter(Instant.now())
-  def isAfterNowPure(/* ??? */): Boolean = ???
+  def isAfterNowPure( /* ??? */ ): Boolean = ???
 
   //
   case class Nel[T](head: T, rest: List[T])
@@ -295,8 +290,6 @@ object Functions {
   def nelPure[T](list: List[T]): ??? = ???
 
   // --
-
-
 
   // Final task.
   // Case classes are Scala's preferred way to define complex data
@@ -320,11 +313,11 @@ object Functions {
   // JSON is a recursive data structure
   sealed trait Json
 
-  case class JObject(/* ??? */) extends Json
+  case class JObject( /* ??? */ ) extends Json
 
-  case class JArray(/* ??? */) extends Json
+  case class JArray( /* ??? */ ) extends Json
 
-  case class JString(/* ??? */) extends Json
+  case class JString( /* ??? */ ) extends Json
 
   case class JNumber(value: BigDecimal) extends Json
 
@@ -334,10 +327,8 @@ object Functions {
 
   // --
 
-
-
   // Task 1. Represent `rawJson` string via defined classes
-  val data: Json = JObject(/* ??? */)
+  val data: Json = JObject( /* ??? */ )
 
   // Task 2. Implement a function `asString` to print given Json data as a json string
 
@@ -353,7 +344,6 @@ object Functions {
   def nestingLevel(data: Json): Int = ???
 
   // See FunctionsSpec for expected results
-
 
   // Additional
   // https://www.scala-exercises.org/std_lib/higher_order_functions

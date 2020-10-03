@@ -1,5 +1,6 @@
 package com.evolutiongaming.bootcamp.basics
 
+import scala.annotation.tailrec
 import scala.util.Try
 
 object DataStructures {
@@ -78,8 +79,18 @@ object DataStructures {
 
   // Exercise. Write a function that checks if all values in a `List` are equal.
   // Think about what you think your function should return if `list` is empty, and why.
+  @tailrec
   def allEqual[T](list: List[T]): Boolean = {
-    false // TODO: implement
+    list.forall(_ == list.head)
+    list.toSet.size == 1
+    list.distinct.length == 1
+
+    list match {
+
+      case Nil          => false
+      case _ :: Nil     => true
+      case x :: y :: xs => if (x != y) false else allEqual(y :: xs)
+    }
   }
 
   // Maps
