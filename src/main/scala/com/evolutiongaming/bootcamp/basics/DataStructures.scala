@@ -1,6 +1,7 @@
 package com.evolutiongaming.bootcamp.basics
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 import scala.util.Try
 
 object DataStructures {
@@ -14,19 +15,21 @@ object DataStructures {
   // Immutable collections never change, however they have operations that return new collections with
   // added, removed or updated elements. The original collection, however, remains unchanged.
 
-  val mutableList = scala.collection.mutable.ListBuffer(1, 2, 3)
+  val mutableList: ListBuffer[Int] = scala.collection.mutable.ListBuffer(1, 2, 3)
   mutableList.update(1, -1)
 
-  val immutableList1 = scala.collection.immutable.List(1, 2, 3)
-  val updatedImmutableList = immutableList1.updated(1, -1)
+  val immutableList1: List[Int] = scala.collection.immutable.List(1, 2, 3)
+  val updatedImmutableList: List[Int] = immutableList1.updated(1, -1)
 
-  val doTheyHaveEqualContents1 = mutableList == updatedImmutableList // true
-  val doTheyHaveEqualContents2 = (mutableList zip updatedImmutableList) forall { case (a, b) => a == b }
+  val doTheyHaveEqualContents1: Boolean = mutableList == updatedImmutableList // true
+  val doTheyHaveEqualContents2: Boolean = mutableList zip updatedImmutableList forall {
+    case (a, b) => a == b
+  }
 
   // Arrays
   //
   // Arrays are mutable, indexed collections which are equivalent to Java's array's. They are indexed from 0.
-  val array = Array(1, 2, 3, 4, 5)
+  val array: Array[Int] = Array(1, 2, 3, 4, 5)
   array(2) // read the 3rd element, it will be 3
   array(3) = 7 // update the 4th element to be 7
 
@@ -37,22 +40,22 @@ object DataStructures {
   // or obtaining the "tail" (all elements except the first one) are fast operations.
 
   val immutableList2 = List(1, 2, 3)
-  val immutableList3 = 1 :: 2 :: 3 :: Nil
+  val immutableList3: List[Int] = 1 :: 2 :: 3 :: Nil
   require(immutableList2 == immutableList3) // the two ways above are the same
 
-  val emptyList1 = Nil
+  val emptyList1: Nil.type = Nil
   val emptyList2 = List()
-  val emptyList3 = List.empty
+  val emptyList3: List[Nothing] = List.empty
 
-  val prepend4 = 4 :: immutableList2 // 4 :: 1 :: 2 :: 3 :: Nil
-  val prepend42 = 5 :: immutableList2 // 5 :: 1 :: 2 :: 3 :: Nil
-  val tailOfList = immutableList2.tail // 2 :: 3 :: Nil
+  val prepend4: List[Int] = 4 :: immutableList2 // 4 :: 1 :: 2 :: 3 :: Nil
+  val prepend42: List[Int] = 5 :: immutableList2 // 5 :: 1 :: 2 :: 3 :: Nil
+  val tailOfList: List[Int] = immutableList2.tail // 2 :: 3 :: Nil
 
-  val joinLists = immutableList2 ::: List(8, 9) // 1 :: 2 :: 3 :: 8 :: 9 :: Nil
+  val joinLists: List[Int] = immutableList2 ::: List(8, 9) // 1 :: 2 :: 3 :: 8 :: 9 :: Nil
 
-  val headOfList1 = Try(emptyList1.head) // what will happen here?!
-  val headOfList2 = emptyList1.headOption // None
-  val headOfList3 = immutableList2.headOption // Some(1)
+  val headOfList1: Try[Nothing] = Try(emptyList1.head) // what will happen here?!
+  val headOfList2: None.type = emptyList1.headOption // None
+  val headOfList3: Option[Int] = immutableList2.headOption // Some(1)
 
   // Question. We have seen `Nil`, `None`, `Nothing` and `null` so far. What do they each mean?
 
@@ -62,9 +65,9 @@ object DataStructures {
   // and updates, as well as fast append and prepend.
 
   val vector1 = Vector(1, 2, 3, 4)
-  val vector2 = 5 +: vector1 // prepend
-  val vector3 = vector1 :+ 6 // append
-  val vector4 = vector2 ++ vector3 // concatenate
+  val vector2: Vector[Int] = 5 +: vector1 // prepend
+  val vector3: Vector[Int] = vector1 :+ 6 // append
+  val vector4: Vector[Int] = vector2 ++ vector3 // concatenate
 
   // Sets
   //
@@ -76,23 +79,21 @@ object DataStructures {
   vegetables("apple") // false
   vegetables.contains("tomatoes") // true, same thing
 
-  val moreVegetables = vegetables + "avocado"
-  val lessVegetables = moreVegetables - "peppers"
+  val moreVegetables: Set[String] = vegetables + "avocado"
+  val lessVegetables: Set[String] = moreVegetables - "peppers"
 
   // Exercise. Write a function that checks if all values in a `List` are equal.
   // Think about what you think your function should return if `list` is empty, and why.
-  @tailrec
   def allEqual[T](list: List[T]): Boolean = {
+//    list match {
+//
+//      case Nil          => false
+//      case _ :: Nil     => true
+//      case x :: y :: xs => if (x != y) false else allEqual(y :: xs)
+//    }
     list.forall(_ == list.head)
     list.toSet.size == 1
     list.distinct.length == 1
-
-    list match {
-
-      case Nil          => false
-      case _ :: Nil     => true
-      case x :: y :: xs => if (x != y) false else allEqual(y :: xs)
-    }
   }
 
   // Maps
@@ -112,10 +113,10 @@ object DataStructures {
     "olives" -> 17
   )
 
-  val moreVegetablePrices = vegetablePrices + ("pumpkins" -> 3)
-  val lessVegetableWeights = vegetableWeights - "pumpkins"
+  val moreVegetablePrices: Map[String, Int] = vegetablePrices + ("pumpkins" -> 3)
+  val lessVegetableWeights: Map[String, Int] = vegetableWeights - "pumpkins"
 
-  val questionableMap = vegetableWeights ++ vegetablePrices
+  val questionableMap: Map[String, Int] = vegetableWeights ++ vegetablePrices
 
   // Question. Why should `questionableMap` be considered questionable?
 
@@ -133,22 +134,31 @@ object DataStructures {
   // Exercise. Calculate the total cost of all vegetables, taking vegetable amounts (in units) from
   // `vegetableAmounts` and prices per unit from `vegetablePrices`. Assume the price is 10 if not available
   // in `vegetablePrices`.
-  val totalVegetableCost: Int = {
-    17 // implement here
-  }
+  val totalVegetableCost: Int = (for {
+    (veggie, amount) <- vegetableAmounts
+  } yield vegetablePrices.getOrElse(veggie, 10) * amount).sum
+
+  val totalVegetableCost1: Int =
+    vegetableAmounts.map {
+      case (veggie, amount) => vegetablePrices.getOrElse(veggie, 10) * amount
+    }.sum
 
   // Exercise. Given the vegetable weights (per 1 unit of vegetable) in `vegetableWeights` and vegetable
   // amounts (in units) in `vegetableAmounts`, calculate the total weight per type of vegetable, if known.
   //
   // For example, the total weight of "olives" is 2 * 32 == 64.
-  val totalVegetableWeights: Map[String, Int] = { // implement here
-    Map()
-  }
+  val totalVegetableWeights: Map[String, Int] =
+    vegetableWeights
+      .flatMap {
+        case (v1, weight) =>
+          vegetableAmounts.get(v1)
+            .map(amount => v1 -> weight * amount)
+      }
 
   // Ranges and Sequences
-  val inclusiveRange: Seq[Int] = 2 to 4    // 2, 3, 4, or <=
+  val inclusiveRange: Seq[Int] = 2 to 4 // 2, 3, 4, or <=
   val exclusiveRange: Seq[Int] = 2 until 4 // 2, 3, or <
-  val withStep: Seq[Int] = 2 to 40 by 7    // 2, 9, 16, 23, 30, 37
+  val withStep: Seq[Int] = 2 to 40 by 7 // 2, 9, 16, 23, 30, 37
 
   // Seq, IndexedSeq and LinearSeq traits are implemented by many collections and contain various useful
   // methods. See https://docs.scala-lang.org/overviews/collections/seqs.html in case you are interested
@@ -203,9 +213,16 @@ object DataStructures {
   //   - For other `n`, for each `set` element `elem`, generate all subsets of size `n - 1` from the set
   //     that don't include `elem`, and add `elem` to them.
   def allSubsetsOfSizeN[A](set: Set[A], n: Int): Set[Set[A]] = {
-    // replace with correct implementation
-    println(n)
-    Set(set)
+    //set.subsets(n).toSet
+    n match {
+      case 1 => for {
+          elem <- set
+        } yield Set(elem)
+      case _ => for {
+          elem    <- set
+          subsets <- allSubsetsOfSizeN(set - elem, n - 1)
+        } yield subsets + elem
+    }
   }
 
   // Homework
@@ -225,5 +242,18 @@ object DataStructures {
   //
   // Input `Map("a" -> 1, "b" -> 2, "c" -> 4, "d" -> 1, "e" -> 0, "f" -> 2, "g" -> 2)` should result in
   // output `List(Set("e") -> 0, Set("a", "d") -> 1, Set("b", "f", "g") -> 2, Set("c") -> 4)`.
-  def sortConsideringEqualValues[T](map: Map[T, Int]): List[(Set[T], Int)] = ???
+  def sortConsideringEqualValues[T](map: Map[T, Int]): Any = {
+    map.groupBy {
+      case (_, value) =>
+        value
+    }.map {
+      case (value, groupedMap) => (
+          groupedMap.keySet,
+          value
+        )
+    }.toList.sortBy {
+      case (_, value) =>
+        value
+    }
+  }
 }
