@@ -2,6 +2,8 @@ package com.evolutiongaming.bootcamp.functions
 
 import java.time.Instant
 
+import scala.util.Try
+
 object Functions {
   // Functions are expressions that have parameters, and take arguments.
 
@@ -32,13 +34,13 @@ object Functions {
 
   // Exercise.
   // Implement `isEven` a function that checks if a number is even
-  def isEven(x: Int): Boolean = ???
+  def isEven(x: Int): Boolean = x % 2 == 0
 
   // Implement `isEvenVal` which behaves exactly like `isEven`.
-  // val isEvenVal: Int => Boolean = ???
+  val isEvenVal: Int => Boolean = x => x % 2 == 0
 
   // Implement `isEvenDefToVal` by transforming `isEven` def function into a val
-  // val isEvenDefToVal: Int => Boolean = ???
+  val isEvenDefToVal: Int => Boolean = isEven
 
   // --
 
@@ -83,13 +85,22 @@ object Functions {
 
   trait MyMap[K, V] extends (K => V)
 
+  val myMap = new MyMap[String, Int] {
+    override def apply(v1: String): Int = ???
+  }
+
+  val map = Map("a" -> 1)
+
+  map.apply("a")
   // Question. What should we extend to ..
 
   // check if an element belongs to a set
-  // > trait MySet[A] extends ???
+  trait MySet[A] extends (A => Boolean)
+
+  val set = set("a", "b")
 
   // return a value by its index
-  // > trait MySeq[A] extends ???
+  trait MySeq[A] extends (Int => Option[A])
 
   // --
 
@@ -100,10 +111,13 @@ object Functions {
 
   // Exercise.
   // Implement `mapOption` a function. Do not use scala option api
-  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = ???
+  def mapOption[A, B](option: Option[A], f: A => B): Option[B] = option match {
+    case Some(x) => Some(f(x))
+    case None    => None
+  }
 
   // Implement `identity` which returns its input unchanged. Do not use scala.Predef.identity
-  def identity[A](x: A): A = ???
+  def identity[A](x: A): A = x
 
   // --
 
@@ -215,11 +229,19 @@ object Functions {
 
   //
   def parseDate(s: String): Instant = Instant.parse(s)
-  def parseDatePure(s: String): ??? = ???
+  def parseDatePure(s: String): Either[String, Instant] = Instant.parse(s) match {
+    case x: Instant => Right(x)
+    case _          => Left("Very bad...")
+  }
+
+  def parseDatePure1(s: String): Option[Instant] = Try(Instant.parse(s)).toOption
 
   //
   def divide(a: Int, b: Int): Int = a / b
-  def dividePure(a: Int, b: Int): ??? = ???
+  def dividePure(a: Int, b: Int): Either[String, Int] = b match {
+    case 0 => Left("Division by zero")
+    case _ => Right(a / b)
+  }
 
   //
   var count = 0
@@ -228,11 +250,11 @@ object Functions {
     count += 1
     newId
   }
-  def idPure( /* ??? */ ): (Int, Int) = ???
+  def idPure(previousId: Int): (Int, Int) = (previousId + 1, previousId)
 
   //
   def isAfterNow(date: Instant): Boolean = date.isAfter(Instant.now())
-  def isAfterNowPure( /* ??? */ ): Boolean = ???
+  def isAfterNowPure(date: Instant, nowProvider: () => Instant): Boolean = date.isAfter(nowProvider())
 
   //
   case class Nel[T](head: T, rest: List[T])
@@ -240,7 +262,10 @@ object Functions {
     if (list.isEmpty) println("ERROR: provide non empty list")
     Nel(list.head, list.tail)
   }
-  def nelPure[T](list: List[T]): ??? = ???
+  def nelPure[T](list: List[T]): Option[Nel[T]] = list match {
+    case x :: xs => Some(Nel(x, xs))
+    case Nil     => None
+  }
 
   // --
 

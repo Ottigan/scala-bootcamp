@@ -54,7 +54,8 @@ object AlgebraicDataTypes {
   // Type aliases may seem similar to value classes, but they provide no additional type safety. They can,
   // however, increase readability of the code in certain scenarios.
   final case class Surname(value: String) extends AnyVal
-  type SurnameAlias = String // No additional type safety in comparison to `String`, arguably a bad example!
+  type SurnameAlias =
+    String // No additional type safety in comparison to `String`, arguably a bad example!
 
   // Question. Can you come up with an example, where using type aliases would make sense?
 
@@ -67,18 +68,27 @@ object AlgebraicDataTypes {
   // Exercise. Create a smart constructor for `GameLevel` that only permits levels from 1 to 80.
   final case class GameLevel private (value: Int) extends AnyVal
   object GameLevel {
-    def create(value: Int): Option[GameLevel] = ???
-  }
+    def create(value: Int): Option[GameLevel] = value match {
+      case x if 1 to 80 contains x => Some(GameLevel(x))
+      case _                       => None
+    }
 
-  // To disable creating case classes in any other way besides smart constructor, the following pattern
-  // can be used. However, it is rather syntax-heavy and cannot be combined with value classes.
-  // Exercise. Implement the smart constructor for `Time` that only permits values from 00:00 to 23:59 and
-  // returns "Invalid hour value" or "Invalid minute value" strings in `Left` when appropriate.
+    GameLevel.create(80)
 
-  // Question. Is using `String` to represent `Left` a good idea?
-  sealed abstract case class Time private (hour: Int, minute: Int)
-  object Time {
-    def create(hour: Int, minute: Int): Either[String, Time] = Right(new Time(hour, minute) {})
+    // To disable creating case classes in any other way besides smart constructor, the following pattern
+    // can be used. However, it is rather syntax-heavy and cannot be combined with value classes.
+    // Exercise. Implement the smart constructor for `Time` that only permits values from 00:00 to 23:59 and
+    // returns "Invalid hour value" or "Invalid minute value" strings in `Left` when appropriate.
+
+    // Question. Is using `String` to represent `Left` a good idea?
+    sealed abstract case class Time private (hour: Int, minute: Int)
+    object Time {
+      def create(hour: Int, minute: Int): Either[String, Time] = {
+        if (hour < 0 && hour > 23) Left("Invalid hour value")
+        else if (minute < 0 && minute > 59) Left("Invalid minute value")
+        else Right(new Time(hour, minute) {})
+      }
+    }
   }
 
   // SUM TYPES
@@ -106,10 +116,12 @@ object AlgebraicDataTypes {
   final case class AccountNumber(value: String) extends AnyVal
   final case class CardNumber(value: String) extends AnyVal
   final case class ValidityDate(month: Int, year: Int)
+
   sealed trait PaymentMethod
   object PaymentMethod {
     final case class BankAccount(accountNumber: AccountNumber) extends PaymentMethod
-    final case class CreditCard(cardNumber: CardNumber, validityDate: ValidityDate) extends PaymentMethod
+    final case class CreditCard(cardNumber: CardNumber, validityDate: ValidityDate)
+        extends PaymentMethod
     final case object Cash extends PaymentMethod
   }
 
@@ -128,11 +140,15 @@ object AlgebraicDataTypes {
 
   // Exercise. Implement `PaymentService.processPayment` using pattern matching and ADTs.
   class PaymentService(
-    bankAccountService: BankAccountService,
-    creditCardService: CreditCardService,
-    cashService: CashService,
+      bankAccountService: BankAccountService,
+      creditCardService: CreditCardService,
+      cashService: CashService
   ) {
-    def processPayment(amount: BigDecimal, method: PaymentMethod): PaymentStatus = ???
+    def processPayment(amount: BigDecimal, method: PaymentMethod): PaymentStatus = method match {
+      case BankAccount(accountNumber) => bankAccountService.processPayment(amount, accountNumber)
+      case c: CreditCard              => creditCardService.processPayment(amount, c)
+      case Cash                       => cashService.processPayment(amount)
+    }
   }
 
   // Let's compare that to `NaivePaymentService.processPayment` implementation, which does not use ADTs, but
@@ -140,10 +156,10 @@ object AlgebraicDataTypes {
   // Question. What are disadvantages of `NaivePaymentService`? Are there any advantages?
   trait NaivePaymentService { // Obviously a bad example!
     def processPayment(
-      amount: BigDecimal,
-      bankAccountNumber: Option[String],
-      validCreditCardNumber: Option[String],
-      isCash: Boolean,
+        amount: BigDecimal,
+        bankAccountNumber: Option[String],
+        validCreditCardNumber: Option[String],
+        isCash: Boolean
     ): String = ???
   }
 
