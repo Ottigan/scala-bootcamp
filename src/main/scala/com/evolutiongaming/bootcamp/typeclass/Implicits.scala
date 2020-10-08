@@ -116,11 +116,15 @@ object Implicits {
 
     object Implicits {
       //put your implicit class or implicit conversion function here
+      implicit class ImpInstant(inner: Instant) {
+        def isBce: Boolean = inner.isBefore(CommonEraStart)
+      }
     }
 
     object Workspace {
+      import Implicits._
       //use isBce extension method to implement this one
-      def isCe(instant: Instant): Boolean = ???
+      def isCe(instant: Instant): Boolean = !instant.isBce
     }
   }
 
@@ -143,13 +147,14 @@ object Implicits {
 
     //multiple parameter lists with multiple implicit parameters in the end
     def putNumbersInTheBox(
-      number1: Int,
+        number1: Int
     )(
-      number2: Int,
+        number2: Int
     )(implicit
-      key: MagicKey,
-      potion: MagicPotion,
-    ): String = s"Number $number1 and $number2 have been put in the magic box using $key and $potion"
+        key: MagicKey,
+        potion: MagicPotion
+    ): String =
+      s"Number $number1 and $number2 have been put in the magic box using $key and $potion"
 
     object Implicits {
       //implicit values can be a 'val'
@@ -168,7 +173,7 @@ object Implicits {
         //= putNumbersInTheBox(1)(2)(Implicits.magicKey, Implicits.TheMagicPotion),
 
         //implicit parameters can also be passed directly:
-        openTheBox(MagicKey("another-key")),
+        openTheBox(MagicKey("another-key"))
       )
     }
   }
@@ -227,7 +232,7 @@ object Implicits {
       case class MyLuckyNumber(value: Int)
       object MyLuckyNumber {
         implicit val myLuckyNumberShow: Show[MyLuckyNumber] =
-          (luckyNumber: MyLuckyNumber) => s"lucky ${ luckyNumber.value }"
+          (luckyNumber: MyLuckyNumber) => s"lucky ${luckyNumber.value}"
       }
 
       def showEverything(): Unit = {
@@ -258,10 +263,11 @@ object Implicits {
   Let's get to know them better!
    */
   object Exercise3 {
+
     /**
-     * Amount of years since the invention of the
-     * hyper-drive technology (we are certainly in negative values at the moment).
-     */
+      * Amount of years since the invention of the
+      * hyper-drive technology (we are certainly in negative values at the moment).
+      */
     case class HDEYears(value: Long)
 
     /*
@@ -274,11 +280,10 @@ object Implicits {
      */
     def secondBiggestValue[T](values: Seq[T]): Option[T] = ???
 
-
     /**
-     * Custom number type!
-     * For now it just wraps a Float but more interesting stuff could come in the future, who knows...
-     */
+      * Custom number type!
+      * For now it just wraps a Float but more interesting stuff could come in the future, who knows...
+      */
     case class CustomNumber(value: Float)
 
     /*
@@ -322,9 +327,9 @@ object Implicits {
     }
 
     case class Triple[T](
-      v1: T,
-      v2: T,
-      v3: T,
+        v1: T,
+        v2: T,
+        v3: T
     )
 
     /*

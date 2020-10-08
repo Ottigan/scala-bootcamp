@@ -1,5 +1,6 @@
 package com.evolutiongaming.bootcamp.adt
 
+import com.evolutiongaming.bootcamp.adt.AlgebraicDataTypes.GameLevel.Time
 import com.evolutiongaming.bootcamp.adt.AlgebraicDataTypes.PaymentMethod._
 import com.evolutiongaming.bootcamp.adt.AlgebraicDataTypes._
 import org.scalacheck.Gen._
@@ -9,7 +10,7 @@ import org.scalatest.matchers.should.Matchers._
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
 
 class AlgebraicDataTypesSpec
-  extends AnyFlatSpec
+    extends AnyFlatSpec
     with OptionValues
     with EitherValues
     with ScalaCheckDrivenPropertyChecks {
@@ -56,19 +57,19 @@ class AlgebraicDataTypesSpec
     val paymentService = new PaymentService(
       new TestBankAccountService,
       new TestCreditCardService,
-      new TestCashService,
+      new TestCashService
     )
     paymentService.processPayment(
       amount = 12.34,
-      method = BankAccount(AccountNumber("123ABC")),
+      method = BankAccount(AccountNumber("123ABC"))
     ) shouldBe PaymentStatus("Sent 12.34 to account number 123ABC")
     paymentService.processPayment(
       amount = 43.21,
-      method = CreditCard(CardNumber("123...53"), ValidityDate(12, 21)),
+      method = CreditCard(CardNumber("123...53"), ValidityDate(12, 21))
     ) shouldBe PaymentStatus("Sent 43.21 to card number 123...53")
     paymentService.processPayment(
       amount = 100,
-      method = Cash,
+      method = Cash
     ) shouldBe PaymentStatus("Sent 100 in cash")
   }
 

@@ -97,7 +97,7 @@ object Functions {
   // check if an element belongs to a set
   trait MySet[A] extends (A => Boolean)
 
-  val set = set("a", "b")
+  val set = Set("a", "b")
 
   // return a value by its index
   trait MySeq[A] extends (Int => Option[A])
@@ -115,9 +115,6 @@ object Functions {
     case Some(x) => Some(f(x))
     case None    => None
   }
-
-  // Implement `identity` which returns its input unchanged. Do not use scala.Predef.identity
-  def identity[A](x: A): A = x
 
   // --
 
