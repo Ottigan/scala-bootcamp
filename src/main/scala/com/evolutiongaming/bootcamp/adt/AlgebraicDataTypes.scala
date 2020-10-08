@@ -163,7 +163,7 @@ object AlgebraicDataTypes {
     ): String = ???
   }
 
-  // Exercise. Define an algebraic data type `Car`, which has a manufacturer, a model, a production year,
+  // Exercise. Define an Algebraic Data Type `Car`, which has a manufacturer, a model, a production year,
   // and a license plate number (can contain from 3 to 8 upper case letters and numbers). Use value classes
   // and smart constructors as appropriate.
   type Car = Nothing
@@ -172,14 +172,14 @@ object AlgebraicDataTypes {
   // task you completed to join the bootcamp. Use your best judgement about particular data types to include
   // in the solution, you can model concepts like:
   //
-  // 1. Suite
+  // 1. Suit
   // 2. Rank
   // 3. Card
   // 4. Hand (Texas or Omaha)
   // 5. Board
   // 6. Poker Combination (High Card, Pair, etc.)
   // 7. Test Case (Board & Hands to rank)
-  // 8. Test Result (Hands ranked in a particular order)
+  // 8. Test Result (Hands ranked in a particular order for a particular Board, accounting for splits)
   //
   // Make sure the defined model protects against invalid data. Use value classes and smart constructors as
   // appropriate. Place the solution under `adt` package in your homework repository.

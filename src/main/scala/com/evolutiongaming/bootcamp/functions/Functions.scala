@@ -154,6 +154,14 @@ object Functions {
     }
   }
 
+  // Example of using partial functions:
+  val eithers: Seq[Either[String, Double]] = List("123", "456", "789o")
+    .map(x => x.toDoubleOption.toRight(s"Failed to parse $x"))
+
+  val errors: Seq[String] = eithers.collect {
+    case Left(x) => x
+  }
+
   // We can make a function that returns another function
   // Example.
   type Language = String
@@ -175,7 +183,8 @@ object Functions {
   val result = fromRuToEn("функция")
 
   // Multiple parameter lists ~ syntax sugar for functions returning a function
-  def translateM(from: Language)(to: Language)(message: String): String = translate(message, from, to)
+  def translateM(from: Language)(to: Language)(message: String): String =
+    translate(message, from, to)
 
   // --
 
@@ -244,17 +253,9 @@ object Functions {
   }
 
   //
-  var count = 0
-  def id(): Int = {
-    val newId = count
-    count += 1
-    newId
-  }
-  def idPure(previousId: Int): (Int, Int) = (previousId + 1, previousId)
-
-  //
   def isAfterNow(date: Instant): Boolean = date.isAfter(Instant.now())
-  def isAfterNowPure(date: Instant, nowProvider: () => Instant): Boolean = date.isAfter(nowProvider())
+  def isAfterNowPure(date: Instant, nowProvider: () => Instant): Boolean =
+    date.isAfter(nowProvider())
 
   //
   case class Nel[T](head: T, rest: List[T])
