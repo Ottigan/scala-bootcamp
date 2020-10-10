@@ -1,5 +1,7 @@
 package com.evolutiongaming.bootcamp.adt
 
+import java.time.Year
+
 object AlgebraicDataTypes {
 
   // ALGEBRAIC DATA TYPES
@@ -54,12 +56,13 @@ object AlgebraicDataTypes {
   // Type aliases may seem similar to value classes, but they provide no additional type safety. They can,
   // however, increase readability of the code in certain scenarios.
   final case class Surname(value: String) extends AnyVal
-  type SurnameAlias =
-    String // No additional type safety in comparison to `String`, arguably a bad example!
+
+  type SurnameAlias = String // No additional type safety in comparison to `String`, arguably a bad example!
 
   // Question. Can you come up with an example, where using type aliases would make sense?
 
   // Exercise. Rewrite the product type `Person`, so that it uses value classes.
+  case class Person1(name: Name, surname: Surname, age: Age)
 
   // SMART CONSTRUCTORS
 
@@ -120,14 +123,14 @@ object AlgebraicDataTypes {
   sealed trait PaymentMethod
   object PaymentMethod {
     final case class BankAccount(accountNumber: AccountNumber) extends PaymentMethod
-    final case class CreditCard(cardNumber: CardNumber, validityDate: ValidityDate)
-        extends PaymentMethod
+    final case class CreditCard(cardNumber: CardNumber, validityDate: ValidityDate) extends PaymentMethod
     final case object Cash extends PaymentMethod
   }
 
   import PaymentMethod._
 
   final case class PaymentStatus(value: String) extends AnyVal
+
   trait BankAccountService {
     def processPayment(amount: BigDecimal, accountNumber: AccountNumber): PaymentStatus
   }
@@ -166,7 +169,27 @@ object AlgebraicDataTypes {
   // Exercise. Define an Algebraic Data Type `Car`, which has a manufacturer, a model, a production year,
   // and a license plate number (can contain from 3 to 8 upper case letters and numbers). Use value classes
   // and smart constructors as appropriate.
-  type Car = Nothing
+  case class Manufacturer(name: String) extends AnyVal
+  case class Model(name: String) extends AnyVal
+  case class ProdYear private (year: Int) extends AnyVal
+  object ProdYear {
+    def create(year: Int): Option[ProdYear] = {
+      if (year > 1885 && year < Year.now().toString.toInt + 1) Some(ProdYear(year))
+      else None
+    }
+  }
+  case class PlateNumber private (name: String) extends AnyVal
+  object PlateNumber {
+    def create(name: String): Option[PlateNumber] = {
+      if (name.length > 2 && name.length < 9 && name == name.toUpperCase) {
+        Some(PlateNumber(name))
+      } else {
+        None
+      }
+    }
+  }
+
+  case class Car(manufacturer: Manufacturer, model: Model, prodYear: ProdYear, plateNumber: PlateNumber)
 
   // Homework. Define all algebraic data types, which would be needed to implement “Hold’em Hand Strength”
   // task you completed to join the bootcamp. Use your best judgement about particular data types to include

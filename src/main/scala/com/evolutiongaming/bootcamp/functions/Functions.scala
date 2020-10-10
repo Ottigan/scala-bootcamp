@@ -168,8 +168,8 @@ object Functions {
     if (from == to) message else message.reverse
   }
 
-  def translateFromRus: (Language, String) => String =
-    (to: String, message: Language) => translate(message, "rus", to)
+  def translateFromRus: (String, Language) => String =
+    (message: String, to: Language) => translate(message, "rus", to)
 
   // `=>` has right associative law
   def translateF: Language => (Language => (String => String)) =
@@ -240,14 +240,12 @@ object Functions {
     case _          => Left("Very bad...")
   }
 
+  // Better than Either because Left channel does not have a meaningful return message
   def parseDatePure1(s: String): Option[Instant] = Try(Instant.parse(s)).toOption
 
   //
   def divide(a: Int, b: Int): Int = a / b
-  def dividePure(a: Int, b: Int): Either[String, Int] = b match {
-    case 0 => Left("Division by zero")
-    case _ => Right(a / b)
-  }
+  def dividePure(a: Int, b: Int): Option[Int] = if (b == 0) None else Some(a / b)
 
   //
   def isAfterNow(date: Instant): Boolean = date.isAfter(Instant.now())
@@ -256,10 +254,12 @@ object Functions {
 
   //
   case class Nel[T](head: T, rest: List[T])
+
   def nel[T](list: List[T]): Nel[T] = {
     if (list.isEmpty) println("ERROR: provide non empty list")
     Nel(list.head, list.tail)
   }
+
   def nelPure[T](list: List[T]): Option[Nel[T]] = list match {
     case x :: xs => Some(Nel(x, xs))
     case Nil     => None
