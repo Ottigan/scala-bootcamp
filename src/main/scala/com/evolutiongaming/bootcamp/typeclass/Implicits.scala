@@ -1,7 +1,10 @@
 package com.evolutiongaming.bootcamp.typeclass
 
+import com.evolutiongaming.bootcamp.typeclass.Implicits.MoreImplicitParameters.Show
+
 import scala.language.implicitConversions
 import scala.util.Random
+import scala.util.Try
 
 object Implicits {
   /*
@@ -146,14 +149,7 @@ object Implicits {
     def openTheBox(implicit key: MagicKey): String = s"Magic box opened with $key"
 
     //multiple parameter lists with multiple implicit parameters in the end
-    def putNumbersInTheBox(
-        number1: Int
-    )(
-        number2: Int
-    )(implicit
-        key: MagicKey,
-        potion: MagicPotion
-    ): String =
+    def putNumbersInTheBox(number1: Int)(number2: Int)(implicit key: MagicKey, potion: MagicPotion): String =
       s"Number $number1 and $number2 have been put in the magic box using $key and $potion"
 
     object Implicits {
@@ -186,7 +182,7 @@ object Implicits {
    */
   object MoreImplicitParameters {
     //Let's call this thing a type-class!
-    trait Show[-T] {
+    trait Show[T] {
       def apply(value: T): String
     }
 
@@ -252,7 +248,8 @@ object Implicits {
    */
   object Exercise2 {
     //change the method signature accordingly
-    def reverseShow(value: Any): String = ???
+    //def reverseShow[T](value: T)(implicit show: Show[T]): String = show(value).reverse
+    def reverseShow[T: Show](value: T): String = implicitly[Show[T]].apply(value).reverse
   }
 
   /*
@@ -269,6 +266,7 @@ object Implicits {
       * hyper-drive technology (we are certainly in negative values at the moment).
       */
     case class HDEYears(value: Long)
+    implicit val HDEYearsOrdering: Ordering[HDEYears] = Ordering.by(_.value.toInt)
 
     /*
     should be defined on any T which has Ordering[T] and return second biggest value from the sequence
@@ -278,13 +276,30 @@ object Implicits {
 
     change the signature accordingly, add implicit instances if needed
      */
-    def secondBiggestValue[T](values: Seq[T]): Option[T] = ???
+    def secondBiggestValue[T](values: Seq[T])(implicit ordering: Ordering[T]): Option[T] = {
+      if (values.size < 2) None
+      else Some(values.sorted.reverse(1))
+    }
 
     /**
       * Custom number type!
       * For now it just wraps a Float but more interesting stuff could come in the future, who knows...
       */
     case class CustomNumber(value: Float)
+    implicit val customNumberFractional: Fractional[CustomNumber] = new Fractional[CustomNumber] {
+      override def div(x: CustomNumber, y: CustomNumber): CustomNumber = CustomNumber(x.value / y.value)
+      override def plus(x: CustomNumber, y: CustomNumber): CustomNumber = CustomNumber(x.value + y.value)
+      override def fromInt(x: Int): CustomNumber = CustomNumber(x.toFloat)
+      override def minus(x: CustomNumber, y: CustomNumber): CustomNumber = CustomNumber(x.value - y.value)
+      override def times(x: CustomNumber, y: CustomNumber): CustomNumber = CustomNumber(x.value * y.value)
+      override def negate(x: CustomNumber): CustomNumber = CustomNumber(-x.value)
+      override def parseString(str: String): Option[CustomNumber] = Try(CustomNumber(str.toFloat)).toOption
+      override def toInt(x: CustomNumber): Int = x.value.toInt
+      override def toLong(x: CustomNumber): Long = x.value.toLong
+      override def toFloat(x: CustomNumber): Float = x.value.toFloat
+      override def toDouble(x: CustomNumber): Double = x.value.toDouble
+      override def compare(x: CustomNumber, y: CustomNumber): Int = x.value.toInt.compareTo(y.value.toInt)
+    }
 
     /*
     should be defined on any T which has Fractional[T], should return average value if it can be obtained
@@ -293,11 +308,21 @@ object Implicits {
 
     change the signature accordingly, add implicit instances if needed
      */
-    def average[T](values: Seq[T]): Option[T] = ???
+    def average[T: Fractional](values: Seq[T]): Option[T] = {
+      if (values.isEmpty) {
+        None
+      } else {
+        val fractional: Fractional[T] = implicitly[Fractional[T]]
+        val sum: T = values.sum
+        val size: T = fractional.fromInt(values.size)
+        Some(fractional.div(sum, size))
+      }
+
+    }
   }
 
   /*
-  Exercise 3.
+  Exercise 4.
 
   Let's get even more generic!
    */
