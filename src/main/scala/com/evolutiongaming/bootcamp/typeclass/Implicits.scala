@@ -276,9 +276,13 @@ object Implicits {
 
     change the signature accordingly, add implicit instances if needed
      */
-    def secondBiggestValue[T](values: Seq[T])(implicit ordering: Ordering[T]): Option[T] = {
+    def secondBiggestValue[T: Ordering](values: Seq[T]): Option[T] = {
       if (values.size < 2) None
       else Some(values.sorted.reverse(1))
+    }
+    def alernateSecondBiggestValue[T](values: Seq[T])(implicit ord: Ordering[T]): Option[T] = {
+      if (values.size < 2) None
+      else Some(values.sorted(ord).reverse(1))
     }
 
     /**
