@@ -2,6 +2,7 @@ package com.evolutiongaming.bootcamp.error_handling
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
+import scala.util.Try
 
 object ErrorHandling extends App {
 
@@ -33,13 +34,9 @@ object ErrorHandling extends App {
   // A simple try-catch-finally block in Scala looks as follows. Note `NonFatal`, which is a handy extractor
   // of non-fatal throwables. It does not catch fatal errors and few other JVM- and Scala-specific `Throwable`
   // subtypes, which typically should not be handled.
-  try {
-    1 / 0
-  } catch {
-    case NonFatal(t) => println(t.getMessage)
-  } finally {
-    println("Will run no matter what")
-  }
+  try { 1 / 0 }
+  catch { case NonFatal(t) => println(t.getMessage) }
+  finally { println("Will run no matter what") }
 
   // While throwing and catching exceptions is the default way of handling errors in Java, Scala (especially
   // functional Scala) prefers other approaches.
@@ -55,7 +52,7 @@ object ErrorHandling extends App {
   // can go wrong or there is no interest in a particular reason for a failure.
 
   // Exercise. Implement `parseIntOption` method.
-  def parseIntOption(string: String): Option[Int] = ???
+  def parseIntOption(string: String): Option[Int] = Try(string.toInt).toOption
 
   // The downside of Option is that it does not encode any information about what exactly went wrong. It only
   // states the mere fact that it did.
@@ -69,8 +66,10 @@ object ErrorHandling extends App {
 
   // Exercise. Implement `parseIntEither` method, returning the parsed integer as `Right` upon success and
   // "{{string}} does not contain an integer" as `Left` upon failure.
-  def parseIntEither(string: String): Either[String, Int] = ???
-
+  def parseIntEither(string: String): Either[String, Int] = string.toIntOption match {
+    case Some(x) => Right(x)
+    case None    => Left(s"$string does not contain an integer")
+  }
   // As an alternative to `String`, a proper ADT can be introduced to formalize all error cases. As discussed
   // in `AlgebraicDataTypes` section, this provides a number of benefits, including an exhaustiveness check
   // at compile time, so one can be sure all error cases are handled.
@@ -78,19 +77,30 @@ object ErrorHandling extends App {
   // Note that this is a superficial example. Always think how detailed you want your error cases to be.
   sealed trait TransferError
   object TransferError {
+
     /** Returned when amount to credit is negative. */
     final case object NegativeAmount extends TransferError
+
     /** Returned when amount to credit is zero. */
     final case object ZeroAmount extends TransferError
+
     /** Returned when amount to credit is equal or greater than 1 000 000. */
     final case object AmountIsTooLarge extends TransferError
+
     /** Returned when amount to credit is within the valid range, but has more than 2 decimal places. */
     final case object TooManyDecimals extends TransferError
   }
   // Exercise. Implement `credit` method, returning `Unit` as `Right` upon success and the appropriate
   // `TransferError` as `Left` upon failure.
-  def credit(amount: BigDecimal): Either[TransferError, Unit] = ???
+  def credit(amount: BigDecimal): Either[TransferError, Unit] = {
+    import TransferError._
 
+    if (amount < 0) { Left(NegativeAmount) }
+    else if (amount == 0) { Left(ZeroAmount) }
+    else if (amount > 1000000) { Left(AmountIsTooLarge) }
+    else if (amount.scale > 2) { Left(TooManyDecimals) }
+    else { Right(()) }
+  }
   // `Either[Throwable, A]` is similar to `Try[A]`. However, because `Try[A]` has its error channel hardcoded
   // to a specific type and `Either[L, R]` does not, `Try[A]` provides more specific methods to deal with
   // throwables. So it may be easier to use in certain scenarios.
@@ -147,29 +157,42 @@ object ErrorHandling extends App {
     private def validateUsername(username: String): AllErrorsOr[String] = {
 
       def validateUsernameLength: AllErrorsOr[String] =
-        if (username.length >= 3 && username.length <= 30) username.validNec
-        else UsernameLengthIsInvalid.invalidNec
+        if (username.length >= 3 && username.length <= 30) username.validNec else UsernameLengthIsInvalid.invalidNec
 
       def validateUsernameContents: AllErrorsOr[String] =
-        if (username.matches("^[a-zA-Z0-9]+$")) username.validNec
-        else UsernameHasSpecialCharacters.invalidNec
+        if (username.matches("^[a-zA-Z0-9]+$")) username.validNec else UsernameHasSpecialCharacters.invalidNec
 
       // `productR` method (can also be written as *>) accumulates both username related errors into a single
       // `AllErrorsOr[String]`. However, it ignores the result of the validator on the left and uses only the
       // result of the validator on the right (hence the `R` suffix).
+      //validateUsernameLength *> (validateUsernameContents)
       validateUsernameLength.productR(validateUsernameContents)
     }
 
     // Exercise. Implement `validateAge` method, so that it returns `AgeIsNotNumeric` if the age string is not
     // a number and `AgeIsOutOfBounds` if the age is not between 18 and 75. Otherwise the age should be
     // considered valid and returned inside `AllErrorsOr`.
-    private def validateAge(age: String): AllErrorsOr[Int] = ???
+    private def validateAge(age: String): AllErrorsOr[Int] = {
+      def validateNumeric: AllErrorsOr[Int] = {
+        age.toIntOption match {
+          case Some(x) => x.validNec
+          case None    => AgeIsNotNumeric.invalidNec
+        }
+      }
+
+      def validateBounds(age: Int): AllErrorsOr[Int] =
+        if (age > 17 && age < 76) age.validNec else AgeIsOutOfBounds.invalidNec
+
+      //validateNumeric.andThen(x => validateBounds(x))
+      //validateNumeric andThen validateBounds
+      validateNumeric.andThen(validateBounds)
+    }
 
     // `validate` method takes raw username and age values (for example, as received via POST request),
     // validates them, transforms as needed and returns `AllErrorsOr[Student]` as a result. `mapN` method
     // allows to map other N Validated instances at the same time.
-    def validate(username: String, age: String): AllErrorsOr[Student] =
-      (validateUsername(username), validateAge(age)).mapN(Student)
+    def validate(username: String, age: String): AllErrorsOr[Student] = (validateUsername(username), validateAge(age))
+      .mapN(Student)
   }
 
   // HANDLING ERRORS IN A FUNCTIONAL WAY
@@ -226,7 +249,7 @@ object ErrorHandling extends App {
   // 3. Implement `validate` method to construct `CreditCard` instance from the supplied raw data.
   object Homework {
 
-    case class CreditCard(/* Add parameters as needed */)
+    case class CreditCard( /* Add parameters as needed */ )
 
     sealed trait ValidationError
     object ValidationError {
@@ -238,10 +261,10 @@ object ErrorHandling extends App {
       type AllErrorsOr[A] = ValidatedNec[ValidationError, A]
 
       def validate(
-        name: String,
-        number: String,
-        expirationDate: String,
-        securityCode: String,
+          name: String,
+          number: String,
+          expirationDate: String,
+          securityCode: String
       ): AllErrorsOr[CreditCard] = ???
     }
   }
