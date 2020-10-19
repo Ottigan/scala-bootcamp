@@ -25,7 +25,7 @@ object CirceExercises {
     - Number
     - Boolean
     - Null
-    */
+     */
     val jTrue: Json = Json.fromBoolean(true) // or Json.True
     val jString: Json = Json.fromString("just string")
     val jNumber: Json = Json.fromInt(10)
@@ -46,8 +46,22 @@ object CirceExercises {
       "actors": ["Keanu Reeves", "Carrie-Anne Moss", "Laurence Fishburne"],
       "isRatedR" true
     }
-    */
-    lazy val jMatrix: Json = ???
+     */
+
+    val movie = Json.fromString("The Matrix")
+    val year = Json.fromInt(1999)
+    val keanu = Json.fromString("Keanu Reeves")
+    val moss = Json.fromString("Carrie-Anne Moss")
+    val laurence = Json.fromString("Laurence Fishburne")
+    val actors = Json.arr(keanu, moss, laurence)
+    val isTrue = Json.True
+
+    lazy val jMatrix: Json = Json.obj(
+      "title" -> movie,
+      "year" -> year,
+      "actors" -> actors,
+      "isRatedR" -> isTrue
+    )
 
     /* Parsing */
     val twinPeaksRawJson: String =
@@ -63,8 +77,6 @@ object CirceExercises {
     val twinPeaksParsed: Json =
       parse(twinPeaksRawJson).getOrElse(Json.Null)
     val tpCursor: HCursor = twinPeaksParsed.hcursor
-    val twinPeaksS3Score: Decoder.Result[Int] =
-      tpCursor.downField("ratings").downN(3).get[Int]("metaScore")
 
     /* Transform */
     val oldGoodTwinPeaks: Json = tpCursor
@@ -155,7 +167,7 @@ object CirceExercises {
       3) Create album, then encode and decode it back
 
       What will happen if you comment codecs for `Song`?
-    */
+     */
     lazy val albumJson: Json = ???
   }
 
@@ -238,7 +250,7 @@ object CirceExercises {
       List[Decoder[Video]](movieDecoder.widen, ytDecoder.widen)
         .reduceLeft(_ or _)
     implicit val videoEncoder: Encoder[Video] = Encoder.instance {
-      case m: Movie => m.asJson
+      case m: Movie    => m.asJson
       case yt: Youtube => yt.asJson
     }
 
@@ -273,6 +285,5 @@ object CirceExercises {
    * Create models json parsers for last.fm API getUserInfo
    *
    */
-
 
 }

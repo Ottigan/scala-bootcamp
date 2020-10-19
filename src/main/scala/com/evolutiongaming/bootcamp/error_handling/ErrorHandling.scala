@@ -1,8 +1,10 @@
 package com.evolutiongaming.bootcamp.error_handling
 
+import java.nio.channels.NetworkChannel
+
 import scala.concurrent.Future
 import scala.util.control.NonFatal
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object ErrorHandling extends App {
 
@@ -66,10 +68,8 @@ object ErrorHandling extends App {
 
   // Exercise. Implement `parseIntEither` method, returning the parsed integer as `Right` upon success and
   // "{{string}} does not contain an integer" as `Left` upon failure.
-  def parseIntEither(string: String): Either[String, Int] = string.toIntOption match {
-    case Some(x) => Right(x)
-    case None    => Left(s"$string does not contain an integer")
-  }
+  def parseIntEither(string: String): Either[String, Int] =
+    Try(string.toInt).toEither.left.map(_ => s"$string does not contain an integer")
   // As an alternative to `String`, a proper ADT can be introduced to formalize all error cases. As discussed
   // in `AlgebraicDataTypes` section, this provides a number of benefits, including an exhaustiveness check
   // at compile time, so one can be sure all error cases are handled.
@@ -96,10 +96,10 @@ object ErrorHandling extends App {
     import TransferError._
 
     if (amount < 0) { Left(NegativeAmount) }
-    else if (amount == 0) { Left(ZeroAmount) }
-    else if (amount > 1000000) { Left(AmountIsTooLarge) }
-    else if (amount.scale > 2) { Left(TooManyDecimals) }
-    else { Right(()) }
+    else if (amount == 0) Left(ZeroAmount)
+    else if (amount > 1000000) Left(AmountIsTooLarge)
+    else if (amount.scale > 2) Left(TooManyDecimals)
+    else Right(())
   }
   // `Either[Throwable, A]` is similar to `Try[A]`. However, because `Try[A]` has its error channel hardcoded
   // to a specific type and `Either[L, R]` does not, `Try[A]` provides more specific methods to deal with
@@ -173,6 +173,7 @@ object ErrorHandling extends App {
     // a number and `AgeIsOutOfBounds` if the age is not between 18 and 75. Otherwise the age should be
     // considered valid and returned inside `AllErrorsOr`.
     private def validateAge(age: String): AllErrorsOr[Int] = {
+
       def validateNumeric: AllErrorsOr[Int] = {
         age.toIntOption match {
           case Some(x) => x.validNec
