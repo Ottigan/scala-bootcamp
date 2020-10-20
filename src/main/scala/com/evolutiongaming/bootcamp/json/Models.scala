@@ -10,27 +10,27 @@ object Models {
   }
 
   final case class Band(
-    title: String,
-    members: Seq[Musician],
-    override val genre: Genre,
-    override val gigs: Seq[Gig]
+      title: String,
+      members: Seq[Musician],
+      override val genre: Genre,
+      override val gigs: Seq[Gig]
   ) extends Artist
 
   final case class SoloMusician(
-    musician: Musician,
-    override val genre: Genre,
-    override val gigs: Seq[Gig]
+      musician: Musician,
+      override val genre: Genre,
+      override val gigs: Seq[Gig]
   ) extends Artist
 
   final case class Musician(
-    name: String,
-    kind: MusicianKind
+      name: String,
+      kind: MusicianKind
   )
 
   final case class Gig(
-                        venue: String,
-                        date: LocalDate,
-                        setlist: Seq[String]
+      venue: String,
+      date: LocalDate,
+      setlist: Seq[String]
   )
 
   sealed trait MusicianKind
