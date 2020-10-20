@@ -1,5 +1,13 @@
 package com.evolutiongaming.bootcamp.testing2
 
+import cats.Monad
+import cats.syntax.all._
+import cats.tagless.finalAlg
+import eu.timepit.refined._
+import eu.timepit.refined.api.Refined
+import eu.timepit.refined.auto._
+import eu.timepit.refined.numeric._
+import eu.timepit.refined.string._
 import org.scalatest.funsuite.AnyFunSuite
 
 // *Introduction*
@@ -22,7 +30,8 @@ object PowerfulScala {
   // Excercise 1
   //
   // Prove Scala is at least as powerful as Java. Make sure that we cannot
-  // call `energy("wrong stuff")`.
+  // call `energy("wrong stuff")`. You will also have to change
+  // "we got a correct result" test, because it accepts `String` now.
   //
   // Run the suite using the command below:
   //
@@ -45,9 +54,65 @@ class PowerfulScalaSpec extends AnyFunSuite {
   }
 
 }
-object Parametricity {
+
+object RefinedScala {
+
+  // As part of learning Algebraic Data Types, you learned another useful technique
+  // how to avoid bugs without having the actual unit tests: smart constructors.
+  //
+  // Like these:
+  case class PositiveNumber private (val value: Int) extends AnyVal
+  object PositiveNumber {
+    def create(value: Int): Option[PositiveNumber] =
+      if (value > 0) Some(PositiveNumber(value)) else None
+  }
+
+  // The problem about smart constructors and value classes is that you create a
+  // new type in Scala 2 (it is fixed in Scala 3), so you have to wrap all
+  // the operations or use some evil methods such as implicit conversions.
+  //
+  // Refined types to the rescue!
+  //
+  // There is a library allowing to check the properties of the types during
+  // compilation, i.e you have the same good old types, but with limitations:
+  case class DatabaseConfig(
+    host: String Refined IPv4,
+    timeoutMilliseconds: Int Refined NonNegative
+  )
+
+  // You can do this:
+  val config = DatabaseConfig(host = "127.0.0.1", timeoutMilliseconds = 16)
+  val timeoutInSeconds = config.timeoutMilliseconds / 1000
+
+  // But you cannot do any of these (try uncommenting them):
+  // DatabaseConfig(host = "127A.0.0.1", timeoutMilliseconds = 16)
+  // DatabaseConfig(host = "127.0.0.1", timeoutMilliseconds = -16)
 
   // Excercise 2
+  //
+  // Prove Scala is at more powerful than Java. Make sure that we cannot
+  // we cannot represent a wrong XML document using the case class by
+  // using `Url` and `Xml` refinements.
+  //
+  // sbt:scala-bootcamp> testOnly *testing2.RefinedScalaSpec
+  //
+  case class Document(url: String, body: String)
+
+}
+class RefinedScalaSpec extends AnyFunSuite {
+
+  test("wrong call does not compile") {
+    RefinedScala.Document(
+      url = "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Examples",
+      body = "<complete/>"
+    )
+    assertTypeError("""RefinedScala.Document("wrong url","<incomplete")""")
+  }
+
+}
+object Parametricity {
+
+  // Excercise 3
   //
   // You, probably, heard about "parametric reasoning" previously during these
   // lectures. Let's repeat the material a bit again.
@@ -89,7 +154,7 @@ object Parametricity {
   // How about this one?
   def f7[A](a: A): Int = ???
 
-  // Excercise 3
+  // Excercise 4
   //
   // How can we use in real life besides creating puzzles for students?
   //
@@ -178,6 +243,106 @@ class ParametricitySpec extends AnyFunSuite {
   test("reversed7 works correctly") {
     assert(Parametricity.reversed7(List.empty[Int]) == Nil)
     assert(Parametricity.reversed7(List(1, 2, 3, 4, 5)) == List(5, 4, 3, 2, 1))
+  }
+
+}
+object EffectTracking {
+
+  // Excercise 5
+  //
+  // We _can_ actually break all the methods above easily with doing some evil
+  // stuff. I.e., for example, we could do VW style code (see also
+  // https://github.com/auchenberg/volkswagen).
+  //
+  // I.e., we could record number of tests we did in some external variable and
+  // only stop working properly after 100 runs. Or we could just check the time
+  // and fail after specific time passed. Or we can be even more evil, and make
+  // sure we check some external URL and if it says to fail, we would fail.
+  //
+  // All these evil things we could do are called effects. Is it possible to
+  // prevent effects to happen during compile time? Turns out that we certain
+  // dicipline we can do it. One techinque is called effect tracking.
+  //
+  // We agree (or check using a static checker) that we do not do effects in
+  // the code. Then, when we really need to do an effect, we pass the effect
+  // as dependency.
+  //
+  // Another cool part is that writing unit tests becomes really easy.
+
+  trait Printing {
+    def print(text: String): Unit
+  }
+  trait Clock {
+    def currentTimeMillis(): Long
+  }
+  trait Variable {
+    def set(x: Long): Unit
+    def get(): Option[Long]
+  }
+  class Service(printing: Printing, clock: Clock, variable: Variable) {
+    def call: Unit = {
+      val currentTime = clock.currentTimeMillis()
+      val previousTime = variable.get()
+      previousTime map { previousTime =>
+        val timePassed = currentTime - previousTime
+        if (timePassed > 1000) printing.print("A second passed since first call!")
+      } getOrElse {
+        variable.set(currentTime)
+      }
+    }
+  }
+
+}
+object EffectTrackingSpec extends AnyFunSuite {
+
+  // Implement the tests validating `Service` functionality.
+  //
+  // Run the tests like following:
+  //
+  // sbt:scala-bootcamp> testOnly *testing2.ParametricitySpec
+  //
+  // Bonus task: implement them using `State` monad mentioned in `UnitTesting` section.
+  test("Service.call prints out correct message after a second") {
+    ???
+  }
+  test("Service.call does not print a message before a second passes") {
+    ???
+  }
+
+}
+object CatsTagless {
+
+  // Was not it tedious to write the code like that in a previous excersise?
+  // We cold use our `Reversable` trick and put the stuff
+  //
+  // As previously mentioned, there are libraries and tecnniques to ease our pain.
+  // The autogenerate most of the stuff for us. We will not go through them this
+  // time, but I just wanted to show how cool does it look.
+
+  @finalAlg
+  trait Printing[F[_]] {
+    def print(text: String): F[Unit]
+  }
+  @finalAlg
+  trait Clock[F[_]] {
+    def currentTimeMillis(): F[Long]
+  }
+  @finalAlg
+  trait Variable[F[_]] {
+    def set(x: Long): F[Unit]
+    def get(): F[Option[Long]]
+  }
+  class Service[F[_]: Monad: Printing: Clock: Variable] {
+    def call: F[Unit] = for {
+      currentTime <- Clock[F].currentTimeMillis()
+      previousTime <- Variable[F].get()
+      _ <- previousTime map { previousTime =>
+        val timePassed = currentTime - previousTime
+        if (timePassed > 1000) Printing[F].print("A second passed since first call!") else ().pure[F]
+      } getOrElse {
+        Variable[F].set(currentTime)
+      }
+    } yield ()
   }
 
 }
