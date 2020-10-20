@@ -1,12 +1,19 @@
 package com.evolutiongaming.bootcamp.testing2
 
+import cats.Monad
+import cats.data.State
+import cats.syntax.all._
 import com.evolutiongaming.bootcamp.testing2.hal9000.HAL9000
+import java.util.concurrent.atomic.AtomicReference
+import org.scalatest.EitherValues
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.funsuite.AsyncFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.EitherValues
 import scala.annotation.nowarn
+import scala.concurrent.Future
+import scala.concurrent.Promise
 
 // *Introduction*
 //
@@ -70,7 +77,7 @@ import scala.annotation.nowarn
 // and the tests themselves are stored in `src/test/scala/testing2`.
 
 
-// *Excersise 1*
+// *Excercise 1*
 //
 // Your IDE (IntelliJ or Visual Studio Code + Metals) also understands this
 // convention and already knows how to run the tests using popular testing
@@ -157,12 +164,12 @@ import scala.annotation.nowarn
 //
 // Run the following suite using the command below:
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise2Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise2Spec
 //
 // Now change the suite so it outputs the following code instead,
 // while keeping all the asserts.
 //
-// [info] Excersise1Spec:
+// [info] Excercise1Spec:
 // [info] calculator
 // [info] - enters the number correctly
 // [info]   fails if incorrect number is pressed
@@ -177,12 +184,12 @@ import scala.annotation.nowarn
 // the tests automatically by adding `~` before the command. It also
 // works on other `sbt` commands.
 //
-// sbt:scala-bootcamp> ~testOnly *testing2.Excersise2Spec
+// sbt:scala-bootcamp> ~testOnly *testing2.Excercise2Spec
 //
 // Now break one of the tests, i.e. change `calculator.enter(1)` to
 // `calculator.enter(2)`. Observe the output. How did Scala manage
 // to output such a thing?
-class Excersise2Spec extends AnyFreeSpec {
+class Excercise2Spec extends AnyFreeSpec {
 
   "calculator" - {
     "enters the number correctly" in {
@@ -205,22 +212,22 @@ class Excersise2Spec extends AnyFreeSpec {
 // Another popular way to write tests is `WordSpec` as it pushes a very strict
 // BDD style of writing the tests to the team.
 //
-// Find it in the following page and rewrite the test from Excersise 2 to
+// Find it in the following page and rewrite the test from Excercise 2 to
 // this new style:
 // https://www.scalatest.org/user_guide/selecting_a_style
 //
 // Run it using sbt again:
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise3Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise3Spec
 //
-class Excersise3Spec extends AnyWordSpec {
+class Excercise3Spec extends AnyWordSpec {
 }
 
 // *Note*
 //
 // Which style do you like more? Are you ready to argue with your colleagues
 // for several days over the best style? Scala developers used to fight about
-// it a lot in early days. Not anymore though
+// it a lot in early days. Not anymore though...
 
 // *Excercise 4*
 //
@@ -234,12 +241,12 @@ class Excersise3Spec extends AnyWordSpec {
 //
 // Rewrite asserts to `should be` matcher and run it using sbt again:
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise4Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise4Spec
 //
 // Now break one of the tests, i.e. change `calculator.enter(1)` to
 // `calculator.enter(2)`. Observe the output. Do you like the input?
-// How does it compare to what you seen in `Excersise1`?
-class Excersise4Spec extends AnyFreeSpec with Matchers {
+// How does it compare to what you seen in `Excercise1`?
+class Excercise4Spec extends AnyFreeSpec with Matchers {
 
   "calculator" - {
     "enters the number correctly" in {
@@ -268,17 +275,17 @@ class Excersise4Spec extends AnyFreeSpec with Matchers {
 //
 // There is also similar construct for `Option`, `PartialFunction` etc.
 //
-// Let's rewrite asserts from the first excersise (or previous excersise
+// Let's rewrite asserts from the first Excercise (or previous Excercise
 // if you prefer so) to the new way. There is one line already rewritten
 // so you can have an example.
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise5Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise5Spec
 //
 // Now break one of the tests, i.e. change `calculator.enter(1)` to
 // `calculator.enter(900)`. Observe the output. Do you like the input?
-// How does it compare to what you seen in Excersise 2?
+// How does it compare to what you seen in Excercise 2?
 @nowarn
-class Excersise5Spec extends AnyFreeSpec with EitherValues {
+class Excercise5Spec extends AnyFreeSpec with EitherValues {
 
   "calculator" - {
     "enters the number correctly" in {
@@ -330,13 +337,13 @@ class Excersise5Spec extends AnyFreeSpec with EitherValues {
 // happier if you make the code more readable, so it is good to be familiar with
 // them.
 //
-// Rewrite the suite from Excersise 2 to `FunSuite` style, the same style
+// Rewrite the suite from Excercise 2 to `FunSuite` style, the same style
 // used by lightweight libraries and also supported by ScalaTest. Run it using
 // sbt again:
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise6Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise6Spec
 //
-class Excersise6Spec extends AnyFunSuite {
+class Excercise6Spec extends AnyFunSuite {
 
   test("name of the test 1") {
     // here goes your test 1
@@ -357,9 +364,9 @@ class Excersise6Spec extends AnyFunSuite {
 // there is also another reason for that. Let's find out the reason by
 // making a test for `testing2.hal9000.HAL9000` class.
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise7Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise7Spec
 //
-class Excersise7Spec extends AnyFunSuite {
+class Excercise7Spec extends AnyFunSuite {
 
   test("HAL 9000 multiplies numbers correctly") {
     // assert(HAL9000.twice(7) == 14)
@@ -377,11 +384,545 @@ class Excersise7Spec extends AnyFunSuite {
 // There is also a special matcher for that, if you want to use them:
 // https://www.scalatest.org/user_guide/using_matchers#expectedExceptions
 //
-// sbt:scala-bootcamp> testOnly *testing2.Excersise8Spec
+// sbt:scala-bootcamp> testOnly *testing2.Excercise8Spec
 //
-class Excersise8Spec extends AnyFunSuite {
+class Excercise8Spec extends AnyFunSuite {
 
   test("HAL 9000 behaves as expected when asked to open the door") {
+  }
+
+}
+
+// *Excercise 9*
+//
+// It is the best to make the code self-documenting and readable. If we cannot,
+// we are trying to make the tests readable. If we cannot achieve test to be
+// readable, we can add the clues into tests.
+//
+// HAL 9000 goes crazy about his mission if two registers do not match.
+// Unfortunately austronauts do not know about it. Save the austronauts
+// by adding a clue to the test below according to the following document:
+//
+// https://www.scalatest.org/user_guide/using_assertions#gettingAClue
+//
+// sbt:scala-bootcamp> testOnly *testing2.Excercise9Spec
+//
+class Excercise9Spec extends AnyFunSuite {
+
+  test("HAL9000") {
+    assert(HAL9000.register1 == HAL9000.register2)
+  }
+
+}
+
+// *Excercise 10*
+//
+// Let's take a more serious example now. Implement a service and
+// the tests for the service. Make sure you log the important steps using
+// logging service.
+//
+// Note that you do not need too have the actual repository for the
+// implementation. It is enough to have an interface with the methods
+// and _inject_ it into the service.
+//
+// This pattern is sometimes called dependency injection because you inject
+// repository versus calling it directly (in other object) and is able to
+// change the implementation later.
+//
+object Excercise10 {
+
+  case class Player(id: String, name: String, email: String, score: Int)
+  trait PlayerRepository {
+    def byId(id: String): Option[Player]
+    def all: List[Player]
+    def update(player: Player): Unit
+    def delete(id: String): Unit
+  }
+  trait Logging {
+    def info(message: String): Unit
+  }
+
+  trait PlayerService {
+
+    /** Deletes all the players with score lower than minimum.
+      *
+      * @param miniumumScore the minimum score the player stays with.
+      */
+    def deleteWorst(minimumScore: Int): Unit
+
+    /** Adds bonus points to score to all existing players
+      *
+      * @param bonus the bonus points to add to the players.
+      */
+    def celebrate(bonus: Int): Unit
+
+  }
+  object PlayerService {
+
+    /** Creates a new service working with existing repository */
+    def apply(repository: PlayerRepository, logging: Logging): PlayerService = new PlayerService {
+
+      // NOTE: We do not have a returned type annotation and documentation here, why?
+      def deleteWorst(minimumScore: Int) = ???
+      def celebrate(bonus: Int) = ???
+
+    }
+
+  }
+
+}
+// As usual, you can run the folliowing test suite using sbt:
+//
+// sbt:scala-bootcamp> testOnly *testing2.Excercise10Spec
+//
+// You might want to construct a stub or a mock for repository to make
+// the test possible.
+//
+// ScalaTest has a good documentation on how to do mocks with various mocking
+// frameworks. This project has Mockito enabled:
+// https://www.scalatest.org/user_guide/testing_with_mock_objects#mockito
+//
+// In this excersise you are welcome to choose your own strategy, but,
+// in general, the author recommends to avoid mocks altogether.
+//
+// Mocks are very powerful, and often create an urge to cover everything with
+// mocks. The problem is with mockist style tests that they often unit test
+// nothing, but just do the "double accounting" of the existing code.
+//
+// We could, as well, written all the code twice. It is not a useless exercise,
+// because you are noticing various issues with original code while writing it
+// twice, but it has own drawbacks. Real, or stub based tests (in contrast to
+// mocks) tend to test real constraints, you need to think before writing them,
+// and they survive refactoring much better.
+//
+// You can read more here:
+// https://martinfowler.com/articles/mocksArentStubs.html
+//
+// Bonus question: do we need to test logging?
+//
+class Excercise10Spec extends AnyFunSuite {
+
+  import Excercise10._
+
+  test("PlayerService.deleteWorst works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService(repository, logging)
+
+    // perform the test
+    service.deleteWorst(???)
+
+    // validate the results
+    assert(???)
+  }
+
+  test("PlayerService.celebrate works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService(repository, logging)
+
+    // perform the test
+    service.celebrate(???)
+
+    // validate the results
+    assert(???)
+  }
+
+}
+
+// *Excercise 11*
+//
+// Do you see the copy-pasted code in Excersise 11? We create `repository` etc.
+// twice. Let's create a fixture for that.
+//
+// See also: https://www.scalatest.org/user_guide/sharing_fixtures
+
+// *Excercise 12*
+//
+// What if the code is asynchronous? Let's implement the same service in
+// asynchronous way and write the tests for it.
+//
+// Hint: modern Scala developers rarely use `Future`. They use `IO` or similar
+// construct instead which provides a lot of benefits and is more convinient to
+// use. We are only using `Future` to keep it simple. Do not use it at home.
+//
+// Just replacing `Future` by `IO` will work most of the time (and here!). We
+// will tell you more about `IO` on another lecture. You can also try
+// self-education here: https://typelevel.org/cats-effect/datatypes/io.html.
+//
+// Hint: seriously, forget about `Future` after this excersise.
+//
+object Excercise12 {
+
+  // We do not need to know how to create `Future` to write the implementation,
+  // thanks to dependency injection, but we might want to know how to combine them.
+  // Combining futures only work if you have implicit execution context in scope.
+  // It is not required to combine `IO` objects, and that is one of the reasons
+  // to use them instead.
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  // 1. The type wrapped by `Future` could be changed by using `map`:
+  def dogs: Future[Int] = ???
+  def message1: Future[String] = dogs map { dogs =>
+    s"We have $dogs of dogs"
+  }
+  // 2. Two `Future` classes could be combined by `flatMap`:
+  def cats: Future[Int] = ???
+  def message2: Future[String] = dogs flatMap { dogs =>
+    cats map { cats =>
+      s"We have $dogs of dogs and $cats of cats"
+    }
+  }
+  // 3. We can use `for...yield` notation to avoid nesting:
+  def message3: Future[String] = for {
+    dogs <- dogs
+    cats <- cats
+  } yield s"We have $dogs of dogs and $cats of cats"
+
+  // Later, for tests, you will need to know how to create the features for your
+  // stubs.
+  //
+  // The simplest is just to wrap your code into `Future { ... }`.
+  // It will start executing in a different thread as soon as the code is called.
+  def future1: Future[Int] = Future { 7 }
+  //
+  // Another way is to create it using a `Promise`.
+  // It will not start executing anything and will complete when the promise is
+  // fulfilled.
+  //
+  val promise: Promise[Int] = Promise()
+  def future2: Future[Int] = promise.future
+  //
+  // Now let complete our Future:
+  promise.success(7)
+  //
+  // Besides that, we will have to have a place to store stuff in our stubs as
+  // using `var` from multiple threads is not safe. We will use `AtomicReference`
+  // for that here. It will be explained in next lecture in details, we will just
+  // accept the construct as it is for now.
+  //
+  // Create the storage place with default value:
+  val storage: AtomicReference[List[Int]] = new AtomicReference(List(1, 2, 3))
+  // Set the value to another one:
+  storage.set(List(5, 6, 7))
+  // Get the current value from the storage:
+  val list = storage.get()
+
+  case class Player(id: String, name: String, email: String, score: Int)
+  trait PlayerRepository {
+    def byId(id: String): Future[Option[Player]]
+    def all: Future[List[Player]]
+    def update(player: Player): Future[Unit]
+    def delete(id: String): Future[Unit]
+  }
+  trait Logging {
+    def info(message: String): Future[Unit]
+  }
+
+  trait PlayerService {
+
+    /** Deletes all the players with score lower than minimum.
+      *
+      * @param miniumumScore the minimum score the player stays with.
+      */
+    def deleteWorst(minimumScore: Int): Future[Unit]
+
+    /** Adds bonus points to score to all existing players
+      *
+      * @param bonus the bonus points to add to the players.
+      */
+    def celebrate(bonus: Int): Future[Unit]
+
+  }
+  object PlayerService {
+
+    /** Creates a new service working with existing repository */
+    def apply(repository: PlayerRepository, logging: Logging): PlayerService = new PlayerService {
+
+      def deleteWorst(minimumScore: Int) = ???
+      def celebrate(bonus: Int) = ???
+
+    }
+
+  }
+
+}
+// ScalaTest supports executing asynchronous code out of the box: just replace
+// `AnyFunSuite` with `AsyncFunSuite` and make sure it returns `Future[Assertion]`:
+// https://www.scalatest.org/user_guide/async_testing
+//
+// sbt:scala-bootcamp> testOnly *testing2.Excercise12Spec
+//
+class Excercise12Spec extends AsyncFunSuite {
+
+  import Excercise12._
+
+  test("PlayerService.deleteWorst works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService(repository, logging)
+
+    // perform the test
+    service.deleteWorst(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+  }
+
+  test("PlayerService.celebrate works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService(repository, logging)
+
+    // perform the test
+    service.celebrate(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+
+  }
+
+}
+// *Excercise 13*
+//
+// What are main problems of asychronous testing? Try to name or guess them
+// without reading further.
+//
+// One of the biggest is that we cannot really say if the test did not complete
+// because of the bug or because it is still working.
+//
+// Modify Excercise 12 code so the test fails with a timeout by forgetting
+// to complete the Promise (a bug), or just doing a long work (by calling
+// `Thread.sleep(...)` in the code).
+//
+// Hint: never use `Thread.sleep` in your production code or test unless you
+// are really sure what are you doing. We can discuss why later if we have
+// the time.
+
+// *Excercise 14*
+//
+// Warning: We did not introduce you to some of the
+// concepts used below, but I really wanted you to show the trick, so you
+// can have something to look forward to. It is fine if you do not understand
+// what is happening below. Feel free to ask questions though.
+//
+// How can we avoid the issues of asynchronous execution? We can abstract
+// over the way we execute!
+//
+object Excercise14 {
+
+  // Remember what other structure allowed to do `map` and `flatMap`? It is
+  // `Option`! What if we could replace `Future` with `Option` in our code
+  // and make it synchronous magically.
+  //
+  // Remember Scala allows you to do pass type parameters to function in
+  // classes like this?
+  def function1[T](list: List[T]): Option[T] = list.headOption
+  // And then call the function like this?
+  val result: Option[Int] = function1(List(1, 2, 3))
+
+  // We will use the same trick now and pass `Option` instead of `Future`
+  // to the code.
+  //
+  // There is one catch. You have to use `T[_]` instead of `T` if you pass
+  // a higher kinded type (see previous lecture).
+  //
+  case class Player(id: String, name: String, email: String, score: Int)
+  trait PlayerRepository[F[_]] {
+    def byId(id: String): F[Option[Player]]
+    def all: F[List[Player]]
+    def update(player: Player): F[Unit]
+    def delete(id: String): F[Unit]
+  }
+  trait Logging[F[_]] {
+    def info(message: String): F[Unit]
+  }
+
+  trait PlayerService[F[_]] {
+
+    /** Deletes all the players with score lower than minimum.
+      *
+      * @param miniumumScore the minimum score the player stays with.
+      */
+    def deleteWorst(minimumScore: Int): F[Unit]
+
+    /** Adds bonus points to score to all existing players
+      *
+      * @param bonus the bonus points to add to the players.
+      */
+    def celebrate(bonus: Int): F[Unit]
+
+  }
+  object PlayerService {
+
+    // Note: we are using special `Monad` type from `cats` library to avoid some boilerplate.
+    // It gives us `map` and `flatMap` methods on our `F`. I.e. it says:
+    // "we have something that have `map` and `flatMap` on it".
+    // You will learn more about `cats` library in next lecture.
+
+    /** Creates a new service working with existing repository */
+    def apply[F[_]: Monad](repository: PlayerRepository[F], logging: Logging[F]): PlayerService[F] = new PlayerService[F] {
+
+      def deleteWorst(minimumScore: Int) = ???
+      def celebrate(bonus: Int) = ???
+
+    }
+
+  }
+
+}
+// Now let's first copy-paste the code form Excercise 12 and replace all
+// `Future` calls by `F` to prove it actually works.
+//
+// sbt:scala-bootcamp> testOnly *testing2.Excercise14FutureSpec
+//
+class Excercise14FutureSpec extends AsyncFunSuite {
+
+  import Excercise14._
+
+  test("PlayerService.deleteWorst works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService[Future](repository, logging)
+
+    // perform the test
+    service.deleteWorst(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+  }
+
+  test("PlayerService.celebrate works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService[Future](repository, logging)
+
+    // perform the test
+    service.celebrate(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+
+  }
+
+}
+
+// Now let's copy-paste the code form above and replace all
+// `Future` calls by `Option` to enjoy rock stable tests.
+//
+// sbt:scala-bootcamp> testOnly *testing2.Excercise14OptionSpec
+//
+// Bonus task: try to break the tests with `Thread.sleep(...)` call
+// as above.
+//
+class Excercise14OptionSpec extends AnyFunSuite {
+
+  import Excercise14._
+
+  test("PlayerService.deleteWorst works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService[Option](repository, logging)
+
+    // perform the test
+    service.deleteWorst(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+  }
+
+  test("PlayerService.celebrate works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService[Option](repository, logging)
+
+    // perform the test
+    service.celebrate(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+
+  }
+
+}
+
+// What is the big problem with the code we wrote above? We use `var` and
+// `AtomicReference` in our stubs a lot. It is a mutable state. Scala developers
+// hate mutable state a lot.
+//
+// Besides that, we have to go inside of the stub and take data out of it sometimes,
+// which might not always be convienient. Can we use our `Option` trick to somehow
+// avoid it?
+//
+// And yes, we can, there is a special type in `cats` library mentioned above.
+// It is called `State` and also have the `map` and `flatMap` methods we need.
+// Plus it has "state" storage which we can use in our tests!
+//
+// Let's use it to simplify our tests a bit.
+//
+// sbt:scala-bootcamp> testOnly *testing2.Excercise14StateSpec
+//
+// Bonus task: also store logging statements in `State`.
+//
+class Excercise14StateSpec extends AnyFunSuite {
+
+  import Excercise14._
+  type F[T] = State[List[Player], T]
+
+  test("PlayerService.deleteWorst works correctly") {
+
+    // construct fixture
+    val repository = new PlayerRepository[F] {
+      def byId(id: String) = State.pure(None)
+      def all = State.get
+      def update(player: Player) = State.modify { players =>
+        players map { p =>
+          if (p.id == player) player else p
+        }
+      }
+      def delete(id: String) = State.modify { players =>
+        players filterNot (_.id == id)
+      }
+    }
+    val logging = ???
+    val service = PlayerService[F](repository, logging)
+
+    // perform the test
+    service.deleteWorst(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+  }
+
+  test("PlayerService.celebrate works correctly") {
+
+    // construct fixture
+    val repository = ???
+    val logging = ???
+    val service = PlayerService[F](repository, logging)
+
+    // perform the test
+    service.celebrate(???) map { _ =>
+      // validate the results
+      assert(???)
+    }
+
   }
 
 }
