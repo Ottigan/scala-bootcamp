@@ -6,7 +6,7 @@ import cats.syntax.functor._
 
 object p0_Introduction {
 
-  /***
+  /** *
     * Our lecture is dedicated to a library that is widely used within Scala community - Cats.
     * The name `Cats` alludes to Category theory and the library contains abstractions making our life
     * easier.
@@ -41,7 +41,8 @@ object p0_Introduction {
   def findUserOpt(name: String): Option[User] = if (name == "Bob") Some(User(name, 1)) else None
   def saveUserOpt(user: User): Option[Boolean] = Some(true)
 
-  def findUserEither(name: String): Either[String, User] = if (name == "Bob") Right(User(name, 1)) else Left("Not found")
+  def findUserEither(name: String): Either[String, User] =
+    if (name == "Bob") Right(User(name, 1)) else Left("Not found")
   def saveUserEither(user: User): Either[String, Boolean] = Left("failed to save user")
 
   /**
@@ -63,7 +64,7 @@ object p0_Introduction {
   val savedAgnOpt: Option[Boolean] = upgradeEffectAgnostic(findUserOpt, saveUserOpt)
   val savedAgnEither: Either[String, Boolean] = upgradeEffectAgnostic(findUserEither, saveUserEither)
 
-    /**
+  /**
     * P.S. Cats resources:
     * https://typelevel.org/cats/
     * https://www.scalawithcats.com/
