@@ -8,7 +8,7 @@ object p7_Traverse {
   /**
     * Traverse provides us a tool for convenient iteration.
     * To grasp the concept, let's take a look at the following example
-    * */
+    */
   final case class User(name: String)
   // imagine that we call some remote API
   def fetchUser(name: String): Future[User] = Future.successful(User(name))
@@ -27,14 +27,25 @@ object p7_Traverse {
 
   /**
     * Ex 7.0 implement traverse function for Option
-    * */
-  def optionTraverse[A](input: List[Option[A]]): Option[List[A]] =
-    ??? /* your code here */
+    */
+  def optionTraverse[A](input: List[Option[A]]): Option[List[A]] = {
+    Option.apply(input.flatten)
+  }
 
   /**
     * Ex 7.1 implement traverse for Either. Use fail fast approach (the first error encountered is returned.)
-    * */
-  def eitherTraverse[E, A](input: List[Either[E, A]]): Either[E, List[A]] = ???
+    */
+  def eitherTraverse[E, A](input: List[Either[E, A]]): Either[E, List[A]] = {
+    def iter(input: List[Either[E, A]], result: List[A]): Either[E, List[A]] = {
+      input match {
+        case Nil            => Right(result)
+        case Left(x) :: _   => Left(x)
+        case Right(x) :: xs => iter(xs, result :+ x)
+      }
+
+    }
+    iter(input, Nil)
+  }
 
   // As usual we can find some instances defined for standard types
   import cats.instances.list._

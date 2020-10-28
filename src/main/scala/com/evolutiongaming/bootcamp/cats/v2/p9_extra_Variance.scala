@@ -57,13 +57,13 @@ object p9_extra_Variance {
       * For example we have types A and B, function `f` from B to A and
       * an instance of F[B] and we need to get F[A]
       * Ex e.1 Complete the definition of Printer
-      * */
+      */
     trait Printer[-A] {
       self =>
       def print(a: A): String
 
       def contramap[B](f: B => A): Printer[B] = new Printer[B] {
-        override def print(a: B): String = ???
+        override def print(a: B): String = f(a).toString
       }
     }
 
@@ -81,10 +81,9 @@ object p9_extra_Variance {
   object Invariance {
 
     /**
-      * No relationship whatsoever. Doesnt matter how A and B relate to each other,
+      * No relationship whatsoever. Doesn't matter how A and B relate to each other,
       * F[A] is never subtype of F[B] and vice versa.
       */
-
 
     trait InvariantPrinter[A] {
       def print(a: A): String

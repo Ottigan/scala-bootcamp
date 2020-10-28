@@ -6,6 +6,7 @@ import cats.syntax.applicative._
 import cats.~>
 
 object p8_MonadTransformers {
+
   /**
     * The final topic for today is monad transformers.
     * So far we've seen a nice way to chain our executions via .map and .flatMap
@@ -29,7 +30,7 @@ object p8_MonadTransformers {
         case Some(gc) => pickGift(gc)
         case None     => Right(None)
       }
-    case None => Right(None)
+    case None       => Right(None)
   }
 
   /**
@@ -38,7 +39,7 @@ object p8_MonadTransformers {
     * It turns out there is one: monad transformers.
     * For example EitherT from Cats composes Either with other monads, OptionT composes Option, etc.
     * The type signatures of monad transformers are written from the inside out, thus an EitherT[Option, String, A] is
-    * a wrapper for an Option[Either[String, A]].
+    * a wrapper for an Option[Either[String, A].
     * It is often useful to use type aliases when writing transformer types for deeply nested monads.
     */
   import cats.instances.either._ // .map(_.author) requires a Functor[Option] instance in implicit scope
@@ -54,7 +55,7 @@ object p8_MonadTransformers {
 
   def giftT: OptionT[AOrErr, Gift] = for {
     user <- fetchUserT()
-    gc <- fetchGiftCardT(user)
+    gc   <- fetchGiftCardT(user)
     gift <- pickGiftT(gc)
   } yield gift
 
@@ -88,12 +89,12 @@ object p8_MonadTransformers {
   type HttpEff[A] = IO[A]
 
   /**
-  * What we want in most cases we'd like to have a transformation from DbEff context into UserServiceEff and from UserServiceEff into HttpEff
-  * That models a natural flow: We try to fetch something from database from service layer and return it through http api.
-  * One of the ways to move from one effect context to another is `natural transformation`, or FunctionK.
-  * Such function transforms values from one type that takes single type parameter to another, i.e. F[_] ~> G[_]
-  * The trick is that we don't really care what's inside if such a transformation exists, we can apply it to any F[_].
-  */
+    * What we want in most cases we'd like to have a transformation from DbEff context into UserServiceEff and from UserServiceEff into HttpEff
+    * That models a natural flow: We try to fetch something from database from service layer and return it through http api.
+    * One of the ways to move from one effect context to another is `natural transformation`, or FunctionK.
+    * Such function transforms values from one type that takes single type parameter to another, i.e. F[_] ~> G[_]
+    * The trick is that we don't really care what's inside if such a transformation exists, we can apply it to any F[_].
+    */
 
   val dbToService: DbEff ~> UserServiceEff = new (DbEff ~> UserServiceEff) {
     override def apply[A](fa: DbEff[A]): UserServiceEff[A] = fa.leftMap(UnderlyingError.apply)
@@ -109,10 +110,10 @@ object p8_MonadTransformers {
 
   val httpMethod: HttpEff[String] = {
     val resultF: UserServiceEff[String] =
-    for {
-      fromDb <- dbToService(dbMethod)
-      fromService <- serviceMethod
-    } yield s"$fromDb $fromService"
+      for {
+        fromDb      <- dbToService(dbMethod)
+        fromService <- serviceMethod
+      } yield s"$fromDb $fromService"
 
     serviceToHttp(resultF)
   }
