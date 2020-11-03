@@ -1,15 +1,11 @@
 package com.evolutiongaming.bootcamp.effects
 
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-
-import cats.effect.{ContextShift, ExitCode, IO, IOApp}
-
+import cats.effect.{ExitCode, IO, IOApp}
 import scala.io.StdIn
 import cats.implicits._
-
 import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.{Random, Try}
 
@@ -330,48 +326,6 @@ object Sequence extends IOApp {
   def run(args: List[String]): IO[ExitCode] = for {
     _ <- sequenceProgram
     _ <- parSequenceProgram
-  } yield ExitCode.Success
-}
-
-/*
- * `ContextShift` is the pure equivalent to `ExecutionContext`:
- * - https://typelevel.org/cats-effect/datatypes/contextshift.html
- *
- * `ContextSwitch#shift` or `IO.shift` can be used to do "cooperative yielding" by triggering a logical fork
- * so that the current thread is not occupied on long running operations.
- *
- * This forms an "async boundary".
- *
- * We can adjust `fib` to have async boundaries every 1000 invocations.
- */
-object Shift extends IOApp {
-  private val Default: ContextShift[IO] = implicitly[ContextShift[IO]]
-
-  private def fibWithShift(n: Int, a: Long = 0, b: Long = 1): IO[Long] =  IO.suspend {
-    n match {
-      case 0 => IO.pure(a)
-      case _ =>
-        val next = fibWithShift(n - 1, b, a + b)
-        if (n % 1000 == 0) Default.shift *> next
-        else next
-    }
-  }
-
-  private val cachedThreadPool = Executors.newCachedThreadPool()
-  private val Blocking: ContextShift[IO] = IO.contextShift(ExecutionContext.fromExecutor(cachedThreadPool))
-
-  private val shiftToSpecific: IO[Unit] = for {
-    _     <- putStrLn("What's your name?")
-    _     <- IO.shift(Blocking)
-    name  <- readStrLn
-    _     <- IO.shift(Default)
-    _     <- putStrLn(s"Hi, $name!")
-    _     <- IO(cachedThreadPool.shutdown())
-  } yield ()
-
-  def run(args: List[String]): IO[ExitCode] = for {
-    _ <- fibWithShift(100000).flatMap(x => putStrLn(s"fibWithShift = $x"))
-    _ <- shiftToSpecific
   } yield ExitCode.Success
 }
 
