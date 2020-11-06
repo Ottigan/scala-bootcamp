@@ -1,6 +1,6 @@
 package com.evolutiongaming.bootcamp.async
 
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
@@ -32,7 +32,6 @@ object BasicFutures extends App {
 
   val failedFuture: Future[Int] = Future.failed(new RuntimeException("oh my")) //doesn't schedule work
   failedFuture.failed.foreach(t => t.printStackTrace())
-
 
   val futureFromBlock: Future[String] = Future {
     //code block is immediately scheduled for execution on the implicit execution context
@@ -83,9 +82,19 @@ object FutureFromPromise extends App {
   - tryComplete
 
   Add implicit args to the function if needed!
-   */
+ */
 object Exercise1 extends App {
-  def firstCompleted[T](f1: Future[T], f2: Future[T])(implicit ec: ExecutionContext): Future[T] = ???
+  def firstCompleted[T](f1: Future[T], f2: Future[T])(implicit ec: ExecutionContext): Future[T] = {
+    val promise = Promise[T]()
+
+    f1.onComplete {
+      case Success(v) => promise.trySuccess(v)
+      case Failure(e) => promise.tryFailure(e)
+    }
+    f2.onComplete(promise.tryComplete)
+
+    promise.future
+  }
 
   {
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -128,7 +137,14 @@ Implement sumAll using collection foldLeft and map + flatMap on Future's (or for
 If called on an empty collection, should return Future.successful(0).
  */
 object Exercise2 extends App {
-  def sumAll(futureValues: Seq[Future[Int]])(implicit ec: ExecutionContext): Future[Int] = ???
+  def sumAll(futureValues: Seq[Future[Int]])(implicit ec: ExecutionContext): Future[Int] = {
+    futureValues.foldLeft(Future.successful(0))(
+      for {
+        b <- _
+        x <- _
+      } yield b + x
+    )
+  }
 
   {
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -250,22 +266,15 @@ object Exercise3 extends App {
   val taskIterations = 1000
   val initialBalance = 10
 
-
   //PLACE TO FIX - START
-  var balance1: Int = initialBalance
-  var balance2: Int = initialBalance
+  val state: AtomicReference[State] = new AtomicReference[State](State(initialBalance, initialBalance))
 
-  def doTaskIteration(): Unit = {
-    val State(newBalance1, newBalance2) = transfer(State(balance1, balance2))
-    balance1 = newBalance1
-    balance2 = newBalance2
-  }
+  def doTaskIteration(): Unit = state.updateAndGet(transfer(_))
 
   def printBalancesSum(): Unit = {
-    println(balance1 + balance2)
+    println(state.get.balance1 + state.get.balance1)
   }
   //PLACE TO FIX - FINISH
-
 
   def transfer(state: State): State = {
     if (state.balance1 >= state.balance2) {
@@ -275,9 +284,11 @@ object Exercise3 extends App {
     }
   }
 
-  val tasks = (1 to tasksCount).toVector.map(_ => Future {
-    (1 to taskIterations).foreach(_ => doTaskIteration())
-  })
+  val tasks = (1 to tasksCount).toVector.map(_ =>
+    Future {
+      (1 to taskIterations).foreach(_ => doTaskIteration())
+    }
+  )
   val tasksResultFuture: Future[Vector[Unit]] = Future.sequence(tasks)
   Await.ready(tasksResultFuture, 5.seconds)
 
