@@ -1,15 +1,11 @@
 package com.evolutiongaming.bootcamp.effects
 
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-
-import cats.effect.{ContextShift, ExitCode, IO, IOApp}
-
+import cats.effect.{ExitCode, IO, IOApp}
 import scala.io.StdIn
 import cats.implicits._
-
 import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.util.{Random, Try}
 
@@ -25,7 +21,7 @@ import scala.util.{Random, Try}
  *
  * In functional programming we wrap side effects into "IO Monads":
  *  - This turns (or captures, or encodes) them into immutable data (pure values)
- *  - Keeps referential transparency so it is easier to refactor our programs and reason about them
+ *  - Keeps referential transparency so that it is easier to refactor our programs and reason about them
  *  - We can evaluate them when we want
  *  - They can be sequentially executed
  *  - They can be used in `for`-comprehensions
@@ -40,7 +36,7 @@ import scala.util.{Random, Try}
  *  There are also ways how to write software without being tied to a particular IO Monad ("Tagless Final"
  *  pattern), but we will not discuss this in this lecture.
  *
- * Asynchronous Effects, as opposed to Scala Future-s, are lazy. Nothing is run until an "unsafe" method
+ * Asynchronous Effects, as opposed to Scala `Future`-s, are lazy. Nothing is run until an "unsafe" method
  * is executed (by your code, or by the `IOApp` trait) - usually at the "end of the world".
  *
  * The IO Monad in Cats Effect is called `IO`.
@@ -131,10 +127,11 @@ object Console {
 import Console.Real._
 
 /*
- * `IO` is a Monad and thus you can work with it as you would with other Monad-s - use `.map`, `.flatMap`,
- * and `for`-comprehensions.
+ * `IO` is a Monad and thus you can work with it as you would with other Monad-s, for example,
+ * use `.map`, `.flatMap`, and `for`-comprehensions.
  *
- * `IOApp` is the `App` equivalent for `IO`-based programs.
+ * `IOApp` is the `App` equivalent for `IO`-based programs and serves as the "end of the world" where
+ * effects are run.
  */
 object IOBuildingBlocks1 extends IOApp {
   private val nameProgram = for {
@@ -191,7 +188,7 @@ object Exercise1_Common {
  *  - `for`-comprehension
  *  - `IO#as` as a `map` which discards the first result to return `ExitCode`-s
  *  - `*>` as a `flatMap` which discards the first result to sequence `IO[Unit]` with another `IO`
- *  - Tests in `AsynchronousEffectsSpec` to check your work
+ *  - Tests in `EffectsSpec` to check your work
  */
 object Exercise1_Functional extends IOApp {
   import Exercise1_Common._
@@ -330,48 +327,6 @@ object Sequence extends IOApp {
   def run(args: List[String]): IO[ExitCode] = for {
     _ <- sequenceProgram
     _ <- parSequenceProgram
-  } yield ExitCode.Success
-}
-
-/*
- * `ContextShift` is the pure equivalent to `ExecutionContext`:
- * - https://typelevel.org/cats-effect/datatypes/contextshift.html
- *
- * `ContextSwitch#shift` or `IO.shift` can be used to do "cooperative yielding" by triggering a logical fork
- * so that the current thread is not occupied on long running operations.
- *
- * This forms an "async boundary".
- *
- * We can adjust `fib` to have async boundaries every 1000 invocations.
- */
-object Shift extends IOApp {
-  private val Default: ContextShift[IO] = implicitly[ContextShift[IO]]
-
-  private def fibWithShift(n: Int, a: Long = 0, b: Long = 1): IO[Long] =  IO.suspend {
-    n match {
-      case 0 => IO.pure(a)
-      case _ =>
-        val next = fibWithShift(n - 1, b, a + b)
-        if (n % 1000 == 0) Default.shift *> next
-        else next
-    }
-  }
-
-  private val cachedThreadPool = Executors.newCachedThreadPool()
-  private val Blocking: ContextShift[IO] = IO.contextShift(ExecutionContext.fromExecutor(cachedThreadPool))
-
-  private val shiftToSpecific: IO[Unit] = for {
-    _     <- putStrLn("What's your name?")
-    _     <- IO.shift(Blocking)
-    name  <- readStrLn
-    _     <- IO.shift(Default)
-    _     <- putStrLn(s"Hi, $name!")
-    _     <- IO(cachedThreadPool.shutdown())
-  } yield ()
-
-  def run(args: List[String]): IO[ExitCode] = for {
-    _ <- fibWithShift(100000).flatMap(x => putStrLn(s"fibWithShift = $x"))
-    _ <- shiftToSpecific
   } yield ExitCode.Success
 }
 
