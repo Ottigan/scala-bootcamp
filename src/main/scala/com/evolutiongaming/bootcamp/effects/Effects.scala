@@ -69,7 +69,7 @@ object LazyVsEagerApp extends App {
 
   Await.result(future1, Duration.Inf)
 
-  val taskFuture  = doTaskFuture("future2")
+  val taskFuture = doTaskFuture("future2")
   val future2: Future[Unit] = for {
     _ <- taskFuture
     _ <- taskFuture
@@ -135,9 +135,9 @@ import Console.Real._
  */
 object IOBuildingBlocks1 extends IOApp {
   private val nameProgram = for {
-    _     <- putStrLn("What's your name?")
-    name  <- readStrLn
-    _     <- putStrLn(s"Hi, $name!")
+    _    <- putStrLn("What's your name?")
+    name <- readStrLn
+    _    <- putStrLn(s"Hi, $name!")
   } yield ()
 
   def run(args: List[String]): IO[ExitCode] = nameProgram as ExitCode.Success
@@ -153,10 +153,10 @@ object Exercise1_Imperative {
     val animal = StdIn.readLine()
     val output = response(animal)
     output match {
-      case Some(x)  =>
+      case Some(x) =>
         println(x)
 
-      case None     =>
+      case None =>
         if (counter >= 2) {
           println("I am disappoint. You have failed to answer too many times.")
           sys.exit(1)
@@ -169,15 +169,14 @@ object Exercise1_Imperative {
   }
 
   // Question: How do you test this?
-  // Question: How do you refactor this to retry upon empty input at most 3 times?
 }
 
 object Exercise1_Common {
   def response(animal: String): Option[String] = animal.trim match {
-    case "cat" | "cats"   =>  "In ancient times cats were worshipped as gods; they have not forgotten this.".some
-    case "dog" | "dogs"   =>  "Be the person your dog thinks you are.".some
-    case x if x.nonEmpty  =>  s"I don't know what to say about '$x'.".some
-    case _                =>  none
+    case "cat" | "cats"  => "In ancient times cats were worshipped as gods; they have not forgotten this.".some
+    case "dog" | "dogs"  => "Be the person your dog thinks you are.".some
+    case x if x.nonEmpty => s"I don't know what to say about '$x'.".some
+    case _               => none
   }
 }
 
@@ -191,9 +190,22 @@ object Exercise1_Common {
  *  - Tests in `EffectsSpec` to check your work
  */
 object Exercise1_Functional extends IOApp {
-  import Exercise1_Common._
+  import Exercise1_Common.response
 
-  def process(console: Console, counter: Int = 0): IO[ExitCode] = ???
+  def process(console: Console, counter: Int = 0): IO[ExitCode] = for {
+    _      <- putStrLn("What is your favourite animal?")
+    input  <- readStrLn
+    result <- response(input) match {
+      case Some(x) => putStrLn(x) as ExitCode.Success
+      case None    =>
+        if (counter >= 2) {
+          putStrLn("I am disappoint. You have failed to answer too many times.") as
+            ExitCode.Error
+        } else {
+          putStrLn("Empty input is not valid, try again...") *> process(console, counter + 1)
+        }
+    }
+  } yield result
 
   override def run(args: List[String]): IO[ExitCode] = process(Console.Real)
 }
@@ -212,14 +224,13 @@ object IOBuildingBlocks2 extends IOApp {
   private def fib(n: Int, a: Long = 0, b: Long = 1): IO[Long] =
     n match {
       case 0 => IO.pure(a)
-      case _ => fib(n - 1, b, a + b).map(_ + 0) // Question: Why did I add this useless `.map` here?
+      case _ => IO.suspend(fib(n - 1, b, a + b).map(_ + 0))
     }
 
   def run(args: List[String]): IO[ExitCode] =
     fib(100000)
       .flatMap(x => putStrLn(s"fib = $x")) as ExitCode.Success
 }
-
 
 object AsyncAndCancelable extends IOApp {
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -262,7 +273,7 @@ object AsyncAndCancelable extends IOApp {
    * `join`-ed (awaiting the result) or `cancel`-ed.
    */
   private val cancelableProgram1 = for {
-    _ <- putStrLn("Launching cancelable")
+    _     <- putStrLn("Launching cancelable")
     io = IO.cancelable[Int] { _ =>
       val keepGoing = new AtomicBoolean(true)
 
@@ -276,20 +287,20 @@ object AsyncAndCancelable extends IOApp {
       IO { keepGoing.getAndSet(false) }.void
     }
     fiber <- io.start
-    _ <- putStrLn(s"Started $fiber")
-    _ <- IO.sleep(5.seconds)
-    _ <- putStrLn(s"cancelling $fiber...")
-    _ <- fiber.cancel
-    _ <- putStrLn(s"cancelable $fiber finished")
+    _     <- putStrLn(s"Started $fiber")
+    _     <- IO.sleep(5.seconds)
+    _     <- putStrLn(s"cancelling $fiber...")
+    _     <- fiber.cancel
+    _     <- putStrLn(s"cancelable $fiber finished")
   } yield ()
 
   private val cancelableProgram2 = for {
     fiber <- tickNSeconds(60).start
-    _ <- putStrLn(s"started $fiber...")
-    _ <- IO.sleep(5.seconds)
-    _ <- putStrLn(s"cancelling $fiber...")
-    _ <- fiber.cancel
-    _ <- putStrLn(s"cancelable $fiber finished...")
+    _     <- putStrLn(s"started $fiber...")
+    _     <- IO.sleep(5.seconds)
+    _     <- putStrLn(s"cancelling $fiber...")
+    _     <- fiber.cancel
+    _     <- putStrLn(s"cancelable $fiber finished...")
   } yield ()
 
   def run(args: List[String]): IO[ExitCode] = for {
@@ -313,15 +324,15 @@ object Sequence extends IOApp {
     .toList
 
   private val sequenceProgram: IO[Unit] = for {
-    _         <-  putStrLn("start sequence")
-    sequenced <-  tasks.sequence
-    _         <-  putStrLn(s"end sequence, results: $sequenced")
+    _         <- putStrLn("start sequence")
+    sequenced <- tasks.sequence
+    _         <- putStrLn(s"end sequence, results: $sequenced")
   } yield ()
 
   private val parSequenceProgram: IO[Unit] = for {
-    _         <-  putStrLn("start parSequence")
-    sequenced <-  tasks.parSequence
-    _         <-  putStrLn(s"end parSequence, results: $sequenced")
+    _         <- putStrLn("start parSequence")
+    sequenced <- tasks.parSequence
+    _         <- putStrLn(s"end parSequence, results: $sequenced")
   } yield ()
 
   def run(args: List[String]): IO[ExitCode] = for {
@@ -343,38 +354,38 @@ object HandlingErrors extends IOApp {
   } yield "success"
 
   def run(args: List[String]): IO[ExitCode] = for {
-    attempt           <-  failingProgram.attempt  // Either[Throwable, A]
-    _                 <-  putStrLn(s"attempt = $attempt")
+    attempt <- failingProgram.attempt // Either[Throwable, A]
+    _       <- putStrLn(s"attempt = $attempt")
 
-    option            <-  failingProgram.option   // Option[A]
-    _                 <-  putStrLn(s"option = $option")
+    option <- failingProgram.option // Option[A]
+    _      <- putStrLn(s"option = $option")
 
-    handleError       <-  failingProgram.handleError(x => s"error:  ${x.getMessage}")
-    _                 <-  putStrLn(s"handleError = $handleError")
+    handleError <- failingProgram.handleError(x => s"error:  ${x.getMessage}")
+    _           <- putStrLn(s"handleError = $handleError")
 
-    handleErrorWith   <-  failingProgram.handleErrorWith(x => IO.pure(s"error: ${x.getMessage}"))
-    _                 <-  putStrLn(s"handleErrorWith = $handleErrorWith")
+    handleErrorWith <- failingProgram.handleErrorWith(x => IO.pure(s"error: ${x.getMessage}"))
+    _               <- putStrLn(s"handleErrorWith = $handleErrorWith")
 
-    recover           <-  failingProgram.recover {
-                            case x if x.getMessage == "error" => s"error: ${x.getMessage}"
-                          }
-    _                 <-  putStrLn(s"recover = $recover")
+    recover <- failingProgram.recover {
+      case x if x.getMessage == "error" => s"error: ${x.getMessage}"
+    }
+    _       <- putStrLn(s"recover = $recover")
 
-    recoverWith       <-  failingProgram.recoverWith {
-                            case x if x.getMessage == "error" => IO.pure(s"error: ${x.getMessage}")
-                          }
-    _                 <-  putStrLn(s"recoverWith = $recoverWith")
+    recoverWith <- failingProgram.recoverWith {
+      case x if x.getMessage == "error" => IO.pure(s"error: ${x.getMessage}")
+    }
+    _           <- putStrLn(s"recoverWith = $recoverWith")
 
-    redeem            <-  failingProgram.redeem(
-                        (x: Throwable) => s"error: ${x.getMessage}",
-                        (x: String) => s"success: $x",
-                      )
-    _                 <-  putStrLn(s"redeem = $redeem")
+    redeem <- failingProgram.redeem(
+      (x: Throwable) => s"error: ${x.getMessage}",
+      (x: String) => s"success: $x"
+    )
+    _      <- putStrLn(s"redeem = $redeem")
 
-    redeemWith        <-  failingProgram.redeemWith(
-                        (x: Throwable)  =>  IO.pure(s"error: ${x.getMessage}"),
-                        (x: String)     =>  IO.pure(s"success: $x"),
-                      )
-    _                 <-  putStrLn(s"redeemWith = $redeemWith")
+    redeemWith <- failingProgram.redeemWith(
+      (x: Throwable) => IO.pure(s"error: ${x.getMessage}"),
+      (x: String) => IO.pure(s"success: $x")
+    )
+    _          <- putStrLn(s"redeemWith = $redeemWith")
   } yield ExitCode.Success
 }

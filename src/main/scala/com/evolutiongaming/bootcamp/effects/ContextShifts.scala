@@ -64,14 +64,14 @@ object ContextShifts extends IOApp {
 
     def cpuBound(i: Int): IO[Int] =
       if (i == Int.MaxValue) IO.pure(i)
-      else IO.shift *> (if(i % 1000000 == 0) logLine(s"Reached $i") else IO.unit) *> IO.suspend(cpuBound(i+1))
+      else IO.shift *> (if (i % 1000000 == 0) logLine(s"Reached $i") else IO.unit) *> IO.suspend(cpuBound(i + 1))
 
     for {
       _ <- logLine("Staring on default cs")
-      _ <- ContextShift[IO].evalOn(cpuExecutionCtx)(logLine("starting io") *> cpuBound(1)  *> logLine("done"))
+      _ <- ContextShift[IO].evalOn(cpuExecutionCtx)(logLine("starting io") *> cpuBound(1) *> logLine("done"))
 //      _ <- cpuShift.shift *> logLine("starting io") *> cpuBound(1)  *> logLine("done") *> ContextShift[IO].shift
       _ <- logLine("end")
-    } yield()
+    } yield ()
   }
 
   // https://typelevel.org/cats-effect/datatypes/contextshift.html#blocker
@@ -107,14 +107,14 @@ object ContextShifts extends IOApp {
     }
 
     for {
-      _ <- logLine("Starting blocked cs")
+      _   <- logLine("Starting blocked cs")
       fib <- (0 to 9).toList.map(i => cpuShift.shift *> IO.delay(blockingCall(i))).parSequence.void.start
-      _ <- logLine("XXXXX Starting blocked cs")
-      _ <- cpuShift.shift
-      _ <- logLine("HYYY starting blocked cs")
-      _ <- logLine("!!! End !!!")
-      _ <- fib.join
-    } yield()
+      _   <- logLine("XXXXX Starting blocked cs")
+      _   <- cpuShift.shift
+      _   <- logLine("HYYY starting blocked cs")
+      _   <- logLine("!!! End !!!")
+      _   <- fib.join
+    } yield ()
   }
 
   def run(args: List[String]): IO[ExitCode] = {
@@ -144,7 +144,7 @@ object ContextShiftExerciseOne extends IOApp {
   /* Exercise #2
    * refactor program to do blocking work on blocker
    */
-  val blockingProgram = {
+  val blockingProgram: IO[Unit] = {
     val blocker = Blocker.fromExecutorService(
       IO.delay(Executors.newCachedThreadPool(newThreadFactory("blocker-pool")))
     )
@@ -160,10 +160,10 @@ object ContextShiftExerciseOne extends IOApp {
 
     blocker.use { blocker =>
       for {
-        sourceFiles <- blocker.blockOn(listSourceFiles(Paths.get("./src")))
+        sourceFiles       <- blocker.blockOn(listSourceFiles(Paths.get("./src")))
         listOfLineLenghts <- blocker.blockOn(sourceFiles.map(linesOfCode).parSequence)
         linesOfCode = listOfLineLenghts.sum
-        _ <- putStrLn(s"Total Lines of code: ${linesOfCode}")
+        _                 <- putStrLn(s"Total Lines of code: ${linesOfCode}")
       } yield ()
     }
   }

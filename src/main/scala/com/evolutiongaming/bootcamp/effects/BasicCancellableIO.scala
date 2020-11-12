@@ -4,10 +4,10 @@ import cats.effect.{Concurrent, ExitCode, IO, IOApp, Timer}
 import cats.implicits._
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
-import scala.concurrent.{Future, blocking}
+import scala.concurrent.{Future, TimeoutException, blocking}
 
 /*
- * Why cancellable IO is needed? Why it's better then Future?
+ * Why cancellable IO is needed? Why it's better than Future?
  * - One cannot just simply cancel Future
  *   - cannot cancel on error condition
  *   - cannot cancel on race
@@ -44,15 +44,15 @@ object BasicCancellableIO extends IOApp {
   }
 
   val ioTimeout = {
-    def runTask(i: Int): IO[Unit] = (1 to i).toList.map { iteration =>
+    def runTask(i: Int): IO[Unit] = (1 to i).toList.map(iteration =>
       for {
         _ <- IO.delay(println(s"${Thread.currentThread().toString} Starting iteration:$iteration work"))
         _ <- IO.sleep(1.second)
         _ <- IO.delay(println(s"${Thread.currentThread().toString} Done iteration:$iteration working"))
       } yield ()
-    }.sequence.void
+    ).sequence.void
 
-    runTask(10).timeout(5.seconds).attempt *> IO.delay(println(s"${Thread.currentThread().toString} Cancelled")) *> IO.sleep(5.seconds)
+    runTask(10).timeout(5.seconds).attempt *> IO.delay(println(s"${Thread.currentThread().toString} Cancelled"))
   }
 
   val raceAndCancel = {
@@ -65,15 +65,18 @@ object BasicCancellableIO extends IOApp {
 
   val exerciseSelfMadeIoTimeout = {
     val tick = (IO.delay(println("Working work long long never terminating")) *> IO.sleep(1.second)).foreverM.void
+    def timeoutIO[A](task: IO[A], timeout: FiniteDuration): IO[A] = {
+      IO.race(IO.sleep(timeout).map(_ => new TimeoutException(s"Timeout reached of $timeout")), task).flatMap(IO.fromEither)
+    }
 
     //alternative to above abstracting from effect type using type classes
-    def tickF[F[_]](implicit F: Concurrent[F]): F[Unit] = F.raiseError(???)
+    def tickF[F[_]](implicit F: Concurrent[F], T: Timer[F]): F[Unit] =
+      (F.delay(println("Working work long long never terminating")) *> T.sleep(1.second)).foreverM.void
+    def timeoutF[F[_], A](task: F[A], timeout: FiniteDuration)(implicit F: Concurrent[F], T: Timer[F]): F[A] = {
+      F.race(T.sleep(timeout).map(_ => new TimeoutException(s"Timeout reached of $timeout")), task).flatMap(F.fromEither)
+    }
 
-    def timeoutIO[A](task: IO[A], timeout: FiniteDuration): IO[A] = IO.raiseError(???)
-
-    def timeoutF[F[_], A](task: F[A], timeout: FiniteDuration)(implicit F: Concurrent[F], T: Timer[F]): F[A] = F.raiseError(???)
-
-    IO.never
+    timeoutF(tickF[IO], 5.seconds)
   }
 
   override def run(args: List[String]): IO[ExitCode] = for {
