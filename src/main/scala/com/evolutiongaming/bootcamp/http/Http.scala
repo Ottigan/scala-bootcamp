@@ -3,6 +3,7 @@ package com.evolutiongaming.bootcamp.http
 import java.time.{Instant, LocalDate}
 
 import cats.data.Validated
+import cats.data.Validated.{Invalid, Valid}
 import cats.effect.{Blocker, ExitCode, IO, IOApp}
 import cats.syntax.all._
 import com.evolutiongaming.bootcamp.http.Protocol._
@@ -112,6 +113,15 @@ object HttpServer extends IOApp {
   // Http4s is a type safe, purely functional, streaming HTTP library for Scala.
   // Let's build an HTTP server using this library powered by Cats Effect IO.
 
+  override def run(args: List[String]): IO[ExitCode] =
+    BlazeServerBuilder[IO](ExecutionContext.global)
+      .bindHttp(port = 9001, host = "localhost")
+      .withHttpApp(httpApp)
+      .serve
+      .compile
+      .drain
+      .as(ExitCode.Success)
+
   // SIMPLE GET AND POST REQUESTS
 
   private val helloRoutes = HttpRoutes.of[IO] {
@@ -150,16 +160,31 @@ object HttpServer extends IOApp {
         .leftMap(t => ParseFailure(s"Failed to decode LocalDate", t.getMessage))
         .toValidatedNel
     }
+
+    implicit val instantDecoder: QueryParamDecoder[Instant] = { param =>
+      Validated
+        .catchNonFatal(Instant.parse(param.value))
+        .leftMap(t => ParseFailure(s"Failed to decode timestamp", t.getMessage))
+        .toValidatedNel
+    }
+
     object LocalDateMatcher extends QueryParamDecoderMatcher[LocalDate](name = "date")
+    object ValidatingInstantMatcher extends ValidatingQueryParamDecoderMatcher[Instant](name = "timestamp")
 
     HttpRoutes.of[IO] {
 
+      // curl "localhost:9001/params/validate?timestamp=2020-11-04T14:19:54.736Z"
+      case GET -> Root / "params" / "validate" :? ValidatingInstantMatcher(result) => result match {
+          case Valid(_)   => Ok("Timestamp is valid")
+          case Invalid(_) => BadRequest("Timestamp is invalid")
+        }
+
       // curl "localhost:9001/params/2020-11-10"
-      case GET -> Root / "params" / LocalDateVar(localDate) =>
+      case GET -> Root / "params" / LocalDateVar(localDate)                        =>
         Ok(s"Matched path param: $localDate")
 
       // curl "localhost:9001/params?date=2020-11-10"
-      case GET -> Root / "params" :? LocalDateMatcher(localDate) =>
+      case GET -> Root / "params" :? LocalDateMatcher(localDate)                   =>
         Ok(s"Matched query param: $localDate")
 
       // Exercise 1. Implement HTTP endpoint that validates the provided timestamp in ISO-8601 format. If valid,
@@ -179,7 +204,12 @@ object HttpServer extends IOApp {
 
     // curl "localhost:9001/headers" -H "Request-Header: Request header value"
     case req @ GET -> Root / "headers" =>
-      Ok(s"Received headers: ${ req.headers }", Header("Response-Header", "Response header value"))
+      Ok(s"Received headers: ${req.headers}", Header("Response-Header", "Response header value"))
+
+    case req @ GET -> Root / "cookies" =>
+      val counterCookie = req.cookies.find(_.name == "counter")
+      val counterValue = counterCookie.flatMap(_.content.toIntOption).fold(1)(_ + 1)
+      Ok().map(_.addCookie("counter", counterValue.toString))
 
     // Exercise 2. Implement HTTP endpoint that attempts to read the value of the cookie named "counter". If
     // present and contains an integer value, it should add 1 to the value and request the client to update
@@ -205,7 +235,7 @@ object HttpServer extends IOApp {
       // curl -XPOST "localhost:9001/json" -d '{"name": "John", "age": 18}' -H "Content-Type: application/json"
       case req @ POST -> Root / "json" =>
         req.as[User].flatMap { user =>
-          val greeting = Greeting(text = s"Hello, ${ user.name }!", timestamp = Instant.now())
+          val greeting = Greeting(text = s"Hello, ${user.name}!", timestamp = Instant.now())
           Ok(greeting.asJson)
         }
     }
@@ -235,15 +265,6 @@ object HttpServer extends IOApp {
   private[http] val httpApp = {
     helloRoutes <+> paramsRoutes <+> headersRoutes <+> jsonRoutes <+> multipartRoutes
   }.orNotFound
-
-  override def run(args: List[String]): IO[ExitCode] =
-    BlazeServerBuilder[IO](ExecutionContext.global)
-      .bindHttp(port = 9001, host = "localhost")
-      .withHttpApp(httpApp)
-      .serve
-      .compile
-      .drain
-      .as(ExitCode.Success)
 }
 
 object HttpClient extends IOApp {
@@ -256,53 +277,54 @@ object HttpClient extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
     BlazeClientBuilder[IO](ExecutionContext.global).resource
-      .parZip(Blocker[IO]).use { case (client, blocker) =>
-      for {
-        _ <- printLine(string = "Executing simple GET and POST requests:")
-        _ <- client.expect[String](uri / "hello" / "world") >>= printLine
-        _ <- client.expect[String](Method.POST("world", uri / "hello")) >>= printLine
-        _ <- printLine()
+      .parZip(Blocker[IO]).use {
+        case (client, blocker) =>
+          for {
+            _ <- printLine(string = "Executing simple GET and POST requests:")
+            _ <- client.expect[String](uri / "hello" / "world") >>= printLine
+            _ <- client.expect[String](Method.POST("world", uri / "hello")) >>= printLine
+            _ <- printLine()
 
-        _ <- printLine(string = "Executing requests with path and query parameters:")
-        _ <- client.expect[String](uri / "params" / "2020-11-10") >>= printLine
-        _ <- client.expect[String]((uri / "params").withQueryParam(key = "date", value = "2020-11-10")) >>= printLine
+            _ <- printLine(string = "Executing requests with path and query parameters:")
+            _ <- client.expect[String](uri / "params" / "2020-11-10") >>= printLine
+            _ <- client.expect[String]((uri / "params").withQueryParam(key = "date", value = "2020-11-10")) >>= printLine
 
-        // Exercise 4. Call HTTP endpoint, implemented in scope of Exercise 1.
-        // curl "localhost:9001/params/validate?timestamp=2020-11-04T14:19:54.736Z"
-        _ <- printLine()
+            // Exercise 4. Call HTTP endpoint, implemented in scope of Exercise 1.
+            // curl "localhost:9001/params/validate?timestamp=2020-11-04T14:19:54.736Z"
+            _ <- printLine()
 
-        _ <- printLine(string = "Executing requests with headers and cookies:")
-        _ <- client.expect[String](Method.GET(uri / "headers", Header("Request-Header", "Request header value"))) >>= printLine
+            _ <- printLine(string = "Executing requests with headers and cookies:")
+            _ <- client.expect[String](Method.GET(uri / "headers", Header("Request-Header", "Request header value"))) >>= printLine
 
-        // Exercise 5. Call HTTP endpoint, implemented in scope of Exercise 2.
-        // curl -v "localhost:9001/cookies" -b "counter=9"
-        _ <- printLine()
+            // Exercise 5. Call HTTP endpoint, implemented in scope of Exercise 2.
+            // curl -v "localhost:9001/cookies" -b "counter=9"
+            _ <- printLine()
 
-        _ <- printLine(string = "Executing requests with JSON entities:")
-        _ <- {
-          import io.circe.generic.auto._
-          import org.http4s.circe.CirceEntityCodec._
+            _ <- printLine(string = "Executing requests with JSON entities:")
+            _ <- {
+              import io.circe.generic.auto._
+              import org.http4s.circe.CirceEntityCodec._
 
-          // User JSON encoder can also be declared explicitly instead of importing from `CirceEntityCodec`:
-          // implicit val helloEncoder = org.http4s.circe.jsonEncoderOf[IO, Hello]
+              // User JSON encoder can also be declared explicitly instead of importing from `CirceEntityCodec`:
+              // implicit val helloEncoder = org.http4s.circe.jsonEncoderOf[IO, Hello]
 
-          client.expect[Greeting](Method.POST(User("John", 18), uri / "json"))
-            .flatMap(greeting => printLine(greeting.toString))
-        }
-        _ <- printLine()
+              client.expect[Greeting](Method.POST(User("John", 18), uri / "json"))
+                .flatMap(greeting => printLine(greeting.toString))
+            }
+            _ <- printLine()
 
-        _ <- printLine(string = "Executing multipart requests:")
-        _ <- {
-          val file = getClass.getResource("/text.txt")
-          val multipart = Multipart[IO](Vector(
-            Part.formData("character", "n"),
-            Part.fileData("file", file, blocker, `Content-Type`(MediaType.text.plain))
-          ))
-          client.expect[String](Method.POST(multipart, uri / "multipart").map(_.withHeaders(multipart.headers))) >>= printLine
-        }
-        _ <- printLine()
-      } yield ()
-    }.as(ExitCode.Success)
+            _ <- printLine(string = "Executing multipart requests:")
+            _ <- {
+              val file = getClass.getResource("/text.txt")
+              val multipart = Multipart[IO](Vector(
+                Part.formData("character", "n"),
+                Part.fileData("file", file, blocker, `Content-Type`(MediaType.text.plain))
+              ))
+              client.expect[String](Method.POST(multipart, uri / "multipart").map(_.withHeaders(multipart.headers))) >>= printLine
+            }
+            _ <- printLine()
+          } yield ()
+      }.as(ExitCode.Success)
 }
 
 // Attributions and useful links:
