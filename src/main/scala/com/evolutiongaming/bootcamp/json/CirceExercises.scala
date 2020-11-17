@@ -225,9 +225,8 @@ object CirceExercises {
   object custom1 {
     implicit val encodeInstant: Encoder[Instant] = Encoder.encodeString.contramap[Instant](_.toString)
 
-    implicit val decodeInstant: Decoder[Instant] = Decoder.decodeString.emap(str =>
-      Either.catchNonFatal(Instant.parse(str)).leftMap(err => "Instant: " + err.getMessage)
-    )
+    implicit val decodeInstant: Decoder[Instant] =
+      Decoder.decodeString.emap(str => Either.catchNonFatal(Instant.parse(str)).leftMap(err => "Instant: " + err.getMessage))
 
     @JsonCodec final case class TimeWindow(before: Instant, after: Instant)
     val timeWindow: TimeWindow = TimeWindow(
