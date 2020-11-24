@@ -16,10 +16,10 @@ object ActorModel extends App {
 
   // 1. describe your actor
   // Actor: trait
-  class EvoActor extends Actor {
+  final class EvoActor extends Actor {
     import EvoActor._
     // internal state, can be shared only via messages
-    var emailCounter = 0
+    private var emailCounter = 0
 
     // need to define only 1 method - describes behavior
     // type Receive = PartialFunction[Any, Unit]
@@ -66,13 +66,15 @@ object ActorModel extends App {
 
 
   // ~ActorApp
-  class EvoMainActor extends Actor {
+  final class EvoMainActor extends Actor {
     // 2. create an actor as a child of another actor
     // - context:  ~local API (provides self ref, sender ref, system, etc)
     // - actorOf:  create an actor as a child of current context
-    // - ActorRef: immutable handle/remote controller to an actor (can be shared, does not change in case of actor failure, etc)
-    val evoActorRef: ActorRef = context.actorOf(EvoActor.props, EvoActor.Name)
+    // - ActorRef: immutable handle/remote controller to an actor (can be shared, does not change in case of
+    //   actor failure, etc)
+    private val evoActorRef: ActorRef = context.actorOf(EvoActor.props, EvoActor.Name)
 
+    println(s"Actor path example: $evoActorRef)")
 
     // 3. send message to our actorRef
     // - tell or ! sends a one-way asynchronous specified message (fire-and-forget semantics)
