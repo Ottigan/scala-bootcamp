@@ -1,5 +1,6 @@
 package com.evolutiongaming.bootcamp.http.descoped
 
+object Http4sServer {
 // Summary table
 //
 // | HTTP method | Request has Body | Safe | Idempotent | Cacheable |
@@ -9,3 +10,4 @@ package com.evolutiongaming.bootcamp.http.descoped
 // | PUT         | Yes              | No   | Yes        | No        |
 // | DELETE      | Optional         | No   | Yes        | No        |
 // | PATCH       | Yes              | No   | No         | No        |
+}

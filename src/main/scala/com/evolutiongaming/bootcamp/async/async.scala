@@ -318,7 +318,6 @@ object Singletons extends App {
   println("Start")
   immaLazyVal
   immaLazyVal
-  Holder.valInsideObject
-  Holder.valInsideObject
+  (Holder.valInsideObject, Holder.valInsideObject)
   println("End")
 }
