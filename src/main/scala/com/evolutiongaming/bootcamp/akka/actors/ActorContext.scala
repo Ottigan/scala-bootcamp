@@ -53,5 +53,4 @@ object ActorContext extends App {
 
   val evoActorSystem: ActorSystem = ActorSystem("evo-actor-system")
   evoActorSystem.actorOf(Props[Main]())
-
 }

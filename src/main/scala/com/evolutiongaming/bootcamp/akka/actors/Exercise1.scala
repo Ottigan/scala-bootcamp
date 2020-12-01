@@ -1,6 +1,7 @@
 package com.evolutiongaming.bootcamp.akka.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import scala.collection.mutable.ArrayBuffer
 
 object Exercise1 extends App {
   object Protocol {
@@ -13,20 +14,36 @@ object Exercise1 extends App {
   Should send tasks downstream batched by batchSize
    */
   final class BatcherActor(
-    batchSize: Int,
-    sinkRef: ActorRef,
+      batchSize: Int,
+      sinkRef: ActorRef
   ) extends Actor {
     import Protocol._
 
     require(batchSize > 0)
 
-    //    private val buffer: ArrayBuffer[Task] = ArrayBuffer.empty
+    private val buffer: ArrayBuffer[Task] = ArrayBuffer.empty
+
     //    or
-    //    private var buffer: Vector[Task] = Vector.empty
+    // private var buffer: Vector[Task] = Vector.empty
+
+    // override def receive: Receive = {
+    //   case task: Task =>
+    //     buffer = buffer :+ task
+
+    //     if (buffer.size == batchSize) {
+    //       sinkRef ! Tasks(buffer)
+    //       buffer = Vector.empty
+    //     }
+    // }
 
     override def receive: Receive = {
       case task: Task =>
-        ???
+        buffer.addOne(task)
+
+        if (buffer.size == batchSize) {
+          sinkRef ! Tasks(buffer.toVector)
+          buffer.clear()
+        }
     }
   }
 
@@ -45,9 +62,9 @@ object Exercise1 extends App {
   val batcherRef = system.actorOf(
     Props(new BatcherActor(
       batchSize = 2,
-      sinkRef = workerRef,
+      sinkRef = workerRef
     )),
-    "batcher",
+    "batcher"
   )
 
   (1.to(7)).map(Protocol.Task).foreach(batcherRef ! _)

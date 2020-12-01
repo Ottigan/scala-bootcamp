@@ -23,7 +23,8 @@ object Exercise2 extends App {
     }
 
     final case class TimeoutException(msg: Any, timeout: Timeout)
-      extends RuntimeException(s"Ask timeout after $timeout on message $msg") with NoStackTrace
+        extends RuntimeException(s"Ask timeout after $timeout on message $msg")
+        with NoStackTrace
 
     /*
     Actor should implement ask pattern:
@@ -36,13 +37,23 @@ object Exercise2 extends App {
     Use context.setReceiveTimeout!
      */
     private class AskActor(
-      targetRef: ActorRef,
-      msg: Any,
-      timeout: Timeout,
-      promise: Promise[Any],
+        targetRef: ActorRef,
+        msg: Any,
+        timeout: Timeout,
+        promise: Promise[Any]
     ) extends Actor {
 
-      override def receive: Receive = ???
+      targetRef ! msg
+      context.setReceiveTimeout(timeout.duration)
+
+      override def receive: Receive = {
+        case ReceiveTimeout                         =>
+          promise.failure(TimeoutException(msg, timeout))
+          context.stop(self)
+        case response: Any if sender() == targetRef =>
+          promise.success(response)
+          context.stop(self)
+      }
     }
   }
 

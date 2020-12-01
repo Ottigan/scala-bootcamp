@@ -19,7 +19,6 @@ object MessageProcessing extends App {
   // processing one message is the atomic unit of execution
   // blocking is replaced by simply enqueueing messages, for later execution.
 
-
   object BankAccount {
     final case class Deposit(x: Int)
     final case class Withdraw(x: Int)
@@ -34,13 +33,13 @@ object MessageProcessing extends App {
     override def receive: Receive = bankAccount(balance = 0)
 
     private def bankAccount(balance: Int): Receive = LoggingReceive {
-      case Deposit(x) =>
+      case Deposit(x)                  =>
         context.become(bankAccount(balance + x))
         sender() ! Done
       case Withdraw(x) if x <= balance =>
         context.become(bankAccount(balance - x))
         sender() ! Done
-      case _ =>
+      case _                           =>
         sender() ! Failure
     }
   }
@@ -62,7 +61,7 @@ object MessageProcessing extends App {
     }
 
     private def awaitWithdraw(to: ActorRef, amount: Int, client: ActorRef): Receive = LoggingReceive {
-      case BankAccount.Done =>
+      case BankAccount.Done    =>
         // 2. make deposit to
         to ! BankAccount.Deposit(amount)
         context.become(awaitDeposit(client))
@@ -97,8 +96,8 @@ object MessageProcessing extends App {
 
       context.become {
         case WireTransfer.Done =>
-        println("done")
-        context.stop(self)
+          println("done")
+          context.stop(self)
       }
     }
   }
